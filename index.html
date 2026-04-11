@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestionale — ASD Pol. Dinamo Molfetta</title>
+
+<!-- Firebase SDK v9 compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ============================================================
+   VARIABILI & RESET
+   ============================================================ */
+:root {
+  --arancio:    #F47920;
+  --arancio-d:  #c75e10;
+  --arancio-l:  #fde8d5;
+  --blu:        #1B2A6B;
+  --blu-d:      #0f1940;
+  --blu-m:      #2a3f9f;
+  --blu-l:      #e8ecf8;
+  --bianco:     #ffffff;
+  --grigio-s:   #f4f5f8;
+  --grigio-m:   #e2e5ee;
+  --grigio-t:   #9099b5;
+  --testo:      #1a1e2e;
+  --testo-m:    #4a5270;
+  --verde:      #1a7a4a;
+  --verde-l:    #d4f0e2;
+  --rosso:      #c0392b;
+  --rosso-l:    #fde8e6;
+  --giallo-l:   #fff8e1;
+  --giallo:     #f9a825;
+
+  --raggio:     10px;
+  --raggio-lg:  16px;
+  --ombra:      0 2px 12px rgba(27,42,107,0.10);
+  --ombra-lg:   0 4px 24px rgba(27,42,107,0.15);
+  --trans:      all 0.2s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--grigio-s);
+  color: var(--testo);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   SCHERMATA DI LOGIN
+   ============================================================ */
+#schermata-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--blu-d) 0%, var(--blu) 60%, var(--blu-m) 100%);
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  padding: 40px 36px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--ombra-lg);
+  text-align: center;
+}
+
+.login-logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  display: block;
+  object-fit: cover;
+  border: 3px solid var(--arancio);
+}
+
+.login-titolo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--blu);
+  margin-bottom: 4px;
+}
+
+.login-sotto {
+  font-size: 13px;
+  color: var(--grigio-t);
+  margin-bottom: 28px;
+}
+
+.login-campo {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--grigio-m);
+  border-radius: var(--raggio);
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: var(--trans);
+  color: var(--testo);
+  background: var(--bianco);
+}
+.login-campo:focus { outline: none; border-color: var(--arancio); }
+
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background: var(--arancio);
+  color: var(--bianco);
+  border: none;
+  border-radius: var(--raggio);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--trans);
+  margin-top: 4px;
+}
+.btn-login:hover { background: var(--arancio-d); }
+
+.login-errore {
+  background: var(--rosso-l);
+  color: var(--rosso);
+  border-radius: var(--raggio);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+
+/* ============================================================
+   SCHERMATA IN ATTESA DI APPROVAZIONE
+   ============================================================ */
+#schermata-attesa {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--blu-d) 0%, var(--blu) 100%);
+  padding: 20px;
+}
+
+.attesa-card {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  padding: 48px 36px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--ombra-lg);
+}
+
+.attesa-icona {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.attesa-titolo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--blu);
+  margin-bottom: 10px;
+}
+
+.attesa-testo {
+  font-size: 14px;
+  color: var(--testo-m);
+  margin-bottom: 24px;
+}
+
+.btn-logout-attesa {
+  padding: 10px 24px;
+  background: var(--grigio-m);
+  color: var(--testo-m);
+  border: none;
+  border-radius: var(--raggio);
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.btn-logout-attesa:hover { background: var(--grigio-t); color: var(--bianco); }
+
+/* ============================================================
+   APP PRINCIPALE
+   ============================================================ */
+#app {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  background: var(--blu);
+  color: var(--bianco);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.header-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--arancio);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.header-titolo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bianco);
+  flex: 1;
+}
+
+.header-titolo span {
+  color: var(--arancio);
+}
+
+.header-utente {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  text-align: right;
+  line-height: 1.3;
+}
+
+.header-utente strong {
+  display: block;
+  color: var(--bianco);
+  font-size: 13px;
+}
+
+.badge-ruolo {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-admin    { background: var(--arancio); color: #fff; }
+.badge-editor   { background: var(--blu-m); color: #fff; }
+.badge-superior { background: var(--verde); color: #fff; }
+.badge-visitor  { background: var(--grigio-m); color: var(--testo-m); }
+
+.btn-logout {
+  background: rgba(255,255,255,0.12);
+  color: var(--bianco);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--trans);
+  flex-shrink: 0;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.22); }
+
+/* NAV A SCHEDE */
+.nav-tabs {
+  background: var(--bianco);
+  border-bottom: 2px solid var(--grigio-m);
+  display: flex;
+  padding: 0 16px;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--grigio-t);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: var(--trans);
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  margin-bottom: -2px;
+}
+.nav-tab:hover { color: var(--blu); }
+.nav-tab.attivo { color: var(--arancio); border-bottom-color: var(--arancio); }
+
+/* CONTENUTO PRINCIPALE */
+.main {
+  flex: 1;
+  padding: 20px 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* BADGE SALVATAGGIO */
+#badge-salvataggio {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--verde);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--raggio);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--ombra-lg);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+#badge-salvataggio.visibile { opacity: 1; }
+
+/* ============================================================
+   COMPONENTI RIUTILIZZABILI
+   ============================================================ */
+.card {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  box-shadow: var(--ombra);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card-titolo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blu);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-titolo .icona {
+  width: 28px;
+  height: 28px;
+  background: var(--arancio);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.griglia-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.griglia-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+@media (max-width: 600px) {
+  .griglia-2, .griglia-3 { grid-template-columns: 1fr; }
+}
+
+.campo-gruppo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.campo-gruppo label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--testo-m);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.campo {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--grigio-m);
+  border-radius: var(--raggio);
+  font-size: 14px;
+  color: var(--testo);
+  background: var(--bianco);
+  transition: var(--trans);
+}
+.campo:focus { outline: none; border-color: var(--arancio); }
+select.campo { cursor: pointer; }
+
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--raggio);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--trans);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primario   { background: var(--arancio); color: #fff; }
+.btn-primario:hover { background: var(--arancio-d); }
+.btn-secondario { background: var(--blu-l); color: var(--blu); }
+.btn-secondario:hover { background: var(--grigio-m); }
+.btn-pericolo   { background: var(--rosso-l); color: var(--rosso); }
+.btn-pericolo:hover { background: var(--rosso); color: #fff; }
+.btn-piccolo    { padding: 6px 12px; font-size: 12px; }
+
+.kpi-griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  padding: 16px 18px;
+  box-shadow: var(--ombra);
+  border-left: 4px solid var(--arancio);
+}
+.kpi-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--blu);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-lab {
+  font-size: 12px;
+  color: var(--grigio-t);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.kpi.verde { border-left-color: var(--verde); }
+.kpi.rosso { border-left-color: var(--rosso); }
+.kpi.blu   { border-left-color: var(--blu-m); }
+
+/* TABELLE */
+.tabella-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+thead th {
+  background: var(--grigio-s);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--grigio-t);
+  border-bottom: 2px solid var(--grigio-m);
+}
+tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--grigio-m);
+  color: var(--testo);
+}
+tbody tr:hover { background: var(--grigio-s); }
+tbody tr:last-child td { border-bottom: none; }
+
+.chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chip-verde  { background: var(--verde-l);  color: var(--verde); }
+.chip-rosso  { background: var(--rosso-l);  color: var(--rosso); }
+.chip-giallo { background: var(--giallo-l); color: #7a5a00; }
+.chip-blu    { background: var(--blu-l);    color: var(--blu); }
+.chip-grigio { background: var(--grigio-m); color: var(--testo-m); }
+
+/* ============================================================
+   SEZIONE CONTABILITÀ
+   ============================================================ */
+.sezione-filtri {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+
+.sezione-filtri .campo-gruppo {
+  min-width: 130px;
+}
+
+/* ============================================================
+   SEZIONE ATLETI
+   ============================================================ */
+.atleta-card {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  box-shadow: var(--ombra);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  transition: var(--trans);
+}
+.atleta-card:hover { box-shadow: var(--ombra-lg); }
+
+.atleta-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--blu-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blu);
+  flex-shrink: 0;
+}
+
+.atleta-info { flex: 1; }
+.atleta-nome {
+  font-weight: 700;
+  color: var(--testo);
+  font-size: 15px;
+}
+.atleta-meta {
+  font-size: 12px;
+  color: var(--grigio-t);
+  margin-top: 2px;
+}
+
+.atleta-azioni {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   SEZIONE PRESENZE
+   ============================================================ */
+.sessione-card {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  box-shadow: var(--ombra);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.sessione-header {
+  background: var(--blu);
+  color: var(--bianco);
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.sessione-header:hover { background: var(--blu-m); }
+
+.sessione-data { font-weight: 700; font-size: 15px; }
+.sessione-stats { font-size: 12px; opacity: 0.8; }
+
+.sessione-body {
+  padding: 14px 18px;
+  display: none;
+}
+.sessione-body.aperto { display: block; }
+
+.presenza-riga {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--grigio-m);
+}
+.presenza-riga:last-child { border-bottom: none; }
+.presenza-nome { font-size: 14px; }
+
+.toggle-presenza {
+  display: flex;
+  gap: 6px;
+}
+.toggle-presenza button {
+  padding: 4px 12px;
+  border: 1.5px solid var(--grigio-m);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  color: var(--testo-m);
+  transition: var(--trans);
+}
+.toggle-presenza button.presente { background: var(--verde); color: #fff; border-color: var(--verde); }
+.toggle-presenza button.assente  { background: var(--rosso-l); color: var(--rosso); border-color: var(--rosso); }
+
+/* ============================================================
+   SEZIONE ADMIN — GESTIONE UTENTI
+   ============================================================ */
+.utente-riga {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--grigio-m);
+  flex-wrap: wrap;
+}
+.utente-riga:last-child { border-bottom: none; }
+.utente-email { font-size: 14px; flex: 1; min-width: 160px; }
+.utente-stato-ctrl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  display: none;
+}
+.modal-overlay.aperto { display: flex; }
+
+.modal {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  box-shadow: var(--ombra-lg);
+  padding: 28px 28px 24px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-titolo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blu);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-chiudi {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--grigio-t);
+  line-height: 1;
+  padding: 0;
+}
+.modal-azioni {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+/* BARRA RICERCA */
+.barra-ricerca {
+  position: relative;
+  margin-bottom: 14px;
+}
+.barra-ricerca input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1.5px solid var(--grigio-m);
+  border-radius: var(--raggio);
+  font-size: 14px;
+  color: var(--testo);
+  background: var(--bianco);
+  transition: var(--trans);
+}
+.barra-ricerca input:focus { outline: none; border-color: var(--arancio); }
+.barra-ricerca::before {
+  content: '🔍';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .header-titolo { font-size: 14px; }
+  .main { padding: 14px 12px; }
+  .nav-tab { padding: 10px 12px; font-size: 13px; }
+  .kpi-val { font-size: 22px; }
+}
+
+/* STRISCE ALTERNANTI (accessibilità) */
+tbody tr:nth-child(even) { background: rgba(244,121,32,0.03); }
+tbody tr:nth-child(even):hover { background: var(--grigio-s); }
+
+/* VUOTO */
+.stato-vuoto {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--grigio-t);
+}
+.stato-vuoto .icona-grande { font-size: 42px; margin-bottom: 12px; }
+.stato-vuoto p { font-size: 15px; }
+
+/* STAGIONE */
+.stagione-badge {
+  background: var(--arancio-l);
+  color: var(--arancio-d);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--arancio);
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== SCHERMATA LOGIN ==================== -->
+<div id="schermata-login">
+  <div class="login-card">
+    <!-- LOGO: sostituire src con URL del logo Dinamo -->
+    <img src="LOGO_DINAMO_3_-A-S.png" alt="Logo Dinamo" class="login-logo" id="logo-login"
+         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'">
+    <div id="logo-fallback" style="display:none; width:90px; height:90px; border-radius:50%; background:var(--blu); margin:0 auto 18px; align-items:center; justify-content:center; font-size:28px;">🏐</div>
+    <div class="login-titolo">ASD Pol. Dinamo Molfetta</div>
+    <div class="login-sotto">Gestionale Stagione <span id="login-stagione">2026/2027</span></div>
+    <input type="email" class="login-campo" id="input-email" placeholder="Email" autocomplete="email">
+    <input type="password" class="login-campo" id="input-password" placeholder="Password" autocomplete="current-password">
+    <button class="btn-login" onclick="eseguiLogin()">Accedi</button>
+    <div class="login-errore" id="login-errore"></div>
+  </div>
+</div>
+
+<!-- ==================== IN ATTESA DI APPROVAZIONE ==================== -->
+<div id="schermata-attesa" style="display:none; min-height:100vh; background:linear-gradient(135deg,var(--blu-d),var(--blu)); align-items:center; justify-content:center; padding:20px;">
+  <div class="attesa-card">
+    <div class="attesa-icona">⏳</div>
+    <div class="attesa-titolo">Account in attesa</div>
+    <div class="attesa-testo">Il tuo account è in attesa di approvazione da parte dell'amministratore. Riceverai accesso non appena il tuo profilo sarà approvato.</div>
+    <button class="btn-logout-attesa" onclick="eseguiLogout()">Esci</button>
+  </div>
+</div>
+
+<!-- ==================== APP PRINCIPALE ==================== -->
+<div id="app" style="display:none; flex-direction:column; min-height:100vh;">
+
+  <!-- Header -->
+  <header class="header">
+    <img src="LOGO_DINAMO_3_-A-S.png" alt="Dinamo" class="header-logo"
+         onerror="this.style.display='none'">
+    <div class="header-titolo">ASD Pol. Dinamo <span>Molfetta</span></div>
+    <span class="stagione-badge" id="header-stagione">2026/2027</span>
+    <div class="header-utente">
+      <strong id="header-nome">—</strong>
+      <span id="header-badge-ruolo"></span>
+    </div>
+    <button class="btn-logout" onclick="eseguiLogout()">Esci</button>
+  </header>
+
+  <!-- Nav tabs -->
+  <nav class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab attivo" onclick="mostraSezione('contabilita', this)">💰 Contabilità</button>
+    <button class="nav-tab" onclick="mostraSezione('atleti', this)">🏐 Atleti</button>
+    <button class="nav-tab" onclick="mostraSezione('presenze', this)">📋 Presenze</button>
+    <button class="nav-tab" id="tab-admin" style="display:none" onclick="mostraSezione('admin', this)">⚙️ Admin</button>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ===== CONTABILITÀ ===== -->
+    <section id="sezione-contabilita">
+
+      <!-- KPI -->
+      <div class="kpi-griglia">
+        <div class="kpi verde">
+          <div class="kpi-val" id="kpi-entrate">€0</div>
+          <div class="kpi-lab">Entrate totali</div>
+        </div>
+        <div class="kpi rosso">
+          <div class="kpi-val" id="kpi-uscite">€0</div>
+          <div class="kpi-lab">Uscite totali</div>
+        </div>
+        <div class="kpi" id="kpi-saldo-card">
+          <div class="kpi-val" id="kpi-saldo">€0</div>
+          <div class="kpi-lab">Saldo</div>
+        </div>
+        <div class="kpi blu">
+          <div class="kpi-val" id="kpi-movimenti">0</div>
+          <div class="kpi-lab">Movimenti</div>
+        </div>
+      </div>
+
+      <!-- Nuovo movimento -->
+      <div class="card" id="form-movimento-card">
+        <div class="card-titolo"><span class="icona">➕</span> Nuovo movimento</div>
+        <div class="griglia-3">
+          <div class="campo-gruppo">
+            <label>Data</label>
+            <input type="date" class="campo" id="mov-data">
+          </div>
+          <div class="campo-gruppo">
+            <label>Tipo</label>
+            <select class="campo" id="mov-tipo">
+              <option value="entrata">Entrata</option>
+              <option value="uscita">Uscita</option>
+            </select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Importo (€)</label>
+            <input type="number" class="campo" id="mov-importo" placeholder="0.00" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="griglia-2" style="margin-top:10px;">
+          <div class="campo-gruppo">
+            <label>Categoria</label>
+            <select class="campo" id="mov-categoria"></select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Descrizione</label>
+            <input type="text" class="campo" id="mov-descrizione" placeholder="Note opzionali">
+          </div>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primario" onclick="aggiungiMovimento()">💾 Salva movimento</button>
+          <button class="btn btn-secondario" id="btn-annulla-modifica" style="display:none" onclick="annullaModifica()">Annulla</button>
+        </div>
+      </div>
+
+      <!-- Filtri + tabella -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">📊</span> Movimenti</div>
+        <div class="sezione-filtri">
+          <div class="campo-gruppo">
+            <label>Periodo</label>
+            <select class="campo" id="filtro-periodo" onchange="filtraMovimenti()">
+              <option value="tutti">Tutti</option>
+              <option value="mese">Questo mese</option>
+              <option value="trimestre">Ultimo trimestre</option>
+            </select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Tipo</label>
+            <select class="campo" id="filtro-tipo" onchange="filtraMovimenti()">
+              <option value="tutti">Tutti</option>
+              <option value="entrata">Entrate</option>
+              <option value="uscita">Uscite</option>
+            </select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Categoria</label>
+            <select class="campo" id="filtro-cat" onchange="filtraMovimenti()">
+              <option value="tutti">Tutte</option>
+            </select>
+          </div>
+          <button class="btn btn-secondario btn-piccolo" onclick="esportaCSV()" style="align-self:flex-end;">⬇️ CSV</button>
+        </div>
+        <div class="tabella-wrap">
+          <table id="tabella-movimenti">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Descrizione</th>
+                <th>Importo</th>
+                <th id="col-azioni-cont"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-movimenti"></tbody>
+          </table>
+          <div class="stato-vuoto" id="vuoto-contabilita" style="display:none;">
+            <div class="icona-grande">💰</div>
+            <p>Nessun movimento registrato</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ATLETI ===== -->
+    <section id="sezione-atleti" style="display:none;">
+
+      <div class="kpi-griglia">
+        <div class="kpi blu">
+          <div class="kpi-val" id="kpi-atleti-tot">0</div>
+          <div class="kpi-lab">Atleti totali</div>
+        </div>
+        <div class="kpi verde">
+          <div class="kpi-val" id="kpi-atleti-tesserati">0</div>
+          <div class="kpi-lab">Tesserati</div>
+        </div>
+        <div class="kpi giallo" style="border-left-color:var(--giallo)">
+          <div class="kpi-val" id="kpi-cert-scad">0</div>
+          <div class="kpi-lab">Cert. in scadenza</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="kpi-squadre">0</div>
+          <div class="kpi-lab">Squadre attive</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+        <div class="barra-ricerca" style="flex:1; min-width:200px; margin-bottom:0;">
+          <input type="text" placeholder="Cerca atleta per nome..." id="ricerca-atleta" oninput="filtraAtleti()">
+        </div>
+        <select class="campo" id="filtro-squadra-atleti" style="max-width:200px;" onchange="filtraAtleti()">
+          <option value="tutti">Tutte le squadre</option>
+        </select>
+        <button class="btn btn-primario" id="btn-nuovo-atleta" onclick="apriModalAtleta()">➕ Nuovo atleta</button>
+      </div>
+
+      <div id="lista-atleti"></div>
+      <div class="stato-vuoto" id="vuoto-atleti" style="display:none;">
+        <div class="icona-grande">🏐</div>
+        <p>Nessun atleta registrato</p>
+      </div>
+    </section>
+
+    <!-- ===== PRESENZE ===== -->
+    <section id="sezione-presenze" style="display:none;">
+
+      <div class="kpi-griglia">
+        <div class="kpi blu">
+          <div class="kpi-val" id="kpi-sessioni">0</div>
+          <div class="kpi-lab">Sessioni totali</div>
+        </div>
+        <div class="kpi verde">
+          <div class="kpi-val" id="kpi-media-presenze">0%</div>
+          <div class="kpi-lab">Media presenze</div>
+        </div>
+      </div>
+
+      <!-- Nuova sessione -->
+      <div class="card" id="form-sessione-card">
+        <div class="card-titolo"><span class="icona">📅</span> Nuova sessione di allenamento</div>
+        <div class="griglia-3">
+          <div class="campo-gruppo">
+            <label>Data</label>
+            <input type="date" class="campo" id="sess-data">
+          </div>
+          <div class="campo-gruppo">
+            <label>Squadra</label>
+            <select class="campo" id="sess-squadra"></select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Tipo</label>
+            <select class="campo" id="sess-tipo">
+              <option value="allenamento">Allenamento</option>
+              <option value="partita">Partita</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-primario" onclick="creaSessione()">📋 Crea sessione</button>
+        </div>
+      </div>
+
+      <!-- Lista sessioni -->
+      <div id="lista-sessioni"></div>
+      <div class="stato-vuoto" id="vuoto-presenze" style="display:none;">
+        <div class="icona-grande">📋</div>
+        <p>Nessuna sessione registrata</p>
+      </div>
+    </section>
+
+    <!-- ===== ADMIN ===== -->
+    <section id="sezione-admin" style="display:none;">
+
+      <!-- Gestione utenti -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">👥</span> Gestione utenti</div>
+        <div id="lista-utenti-admin">
+          <div class="stato-vuoto"><div class="icona-grande">⏳</div><p>Caricamento...</p></div>
+        </div>
+      </div>
+
+      <!-- Gestione categorie contabilità -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">🏷️</span> Categorie contabilità</div>
+        <div id="lista-categorie-cont"></div>
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+          <input type="text" class="campo" id="nuova-cat-cont" placeholder="Nuova categoria..." style="max-width:240px;">
+          <select class="campo" id="nuova-cat-tipo" style="max-width:140px;">
+            <option value="entrata">Entrata</option>
+            <option value="uscita">Uscita</option>
+            <option value="entrambi">Entrambi</option>
+          </select>
+          <button class="btn btn-primario btn-piccolo" onclick="aggiungiCategoria()">➕ Aggiungi</button>
+        </div>
+      </div>
+
+      <!-- Gestione squadre -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">🏐</span> Squadre / Categorie atleti</div>
+        <div id="lista-squadre-admin"></div>
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+          <input type="text" class="campo" id="nuova-squadra" placeholder="Nome squadra/categoria..." style="max-width:280px;">
+          <button class="btn btn-primario btn-piccolo" onclick="aggiungiSquadra()">➕ Aggiungi</button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- BADGE SALVATAGGIO -->
+<div id="badge-salvataggio">✅ Salvato</div>
+
+<!-- MODAL ATLETA -->
+<div class="modal-overlay" id="modal-atleta">
+  <div class="modal">
+    <div class="modal-titolo">
+      <span id="modal-atleta-titolo">Nuovo atleta</span>
+      <button class="modal-chiudi" onclick="chiudiModalAtleta()">×</button>
+    </div>
+    <div class="griglia-2">
+      <div class="campo-gruppo">
+        <label>Nome *</label>
+        <input type="text" class="campo" id="atl-nome" placeholder="Nome">
+      </div>
+      <div class="campo-gruppo">
+        <label>Cognome *</label>
+        <input type="text" class="campo" id="atl-cognome" placeholder="Cognome">
+      </div>
+    </div>
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Data di nascita</label>
+        <input type="date" class="campo" id="atl-nascita">
+      </div>
+      <div class="campo-gruppo">
+        <label>Squadra</label>
+        <select class="campo" id="atl-squadra"></select>
+      </div>
+    </div>
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Ruolo</label>
+        <select class="campo" id="atl-ruolo">
+          <option value="">— non specificato —</option>
+          <option>Palleggiatore</option>
+          <option>Schiacciatore</option>
+          <option>Opposto</option>
+          <option>Centrale</option>
+          <option>Libero</option>
+          <option>Ricevitore</option>
+        </select>
+      </div>
+      <div class="campo-gruppo">
+        <label>Stato tesseramento</label>
+        <select class="campo" id="atl-stato-tess">
+          <option value="in_corso">In corso</option>
+          <option value="tesserato">Tesserato</option>
+          <option value="non_tesserato">Non tesserato</option>
+          <option value="sospeso">Sospeso</option>
+        </select>
+      </div>
+    </div>
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Scad. certificato medico</label>
+        <input type="date" class="campo" id="atl-cert">
+      </div>
+      <div class="campo-gruppo">
+        <label>Telefono / contatto</label>
+        <input type="text" class="campo" id="atl-telefono" placeholder="Opzionale">
+      </div>
+    </div>
+    <div class="campo-gruppo" style="margin-top:10px;">
+      <label>Note</label>
+      <input type="text" class="campo" id="atl-note" placeholder="Note libere">
+    </div>
+    <div class="modal-azioni">
+      <button class="btn btn-secondario" onclick="chiudiModalAtleta()">Annulla</button>
+      <button class="btn btn-primario" onclick="salvaAtleta()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FIREBASE + LOGICA ==================== -->
+<script>
+// ============================================================
+// CONFIGURAZIONE FIREBASE — sostituire con i dati reali
+// ============================================================
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ============================================================
+// STATO GLOBALE
+// ============================================================
+const STAGIONE = "2026/2027";
+let utenteCorrente = null;
+let ruoloCorrente  = null;
+let movimentiInMemoria = [];
+let atletiInMemoria    = [];
+let sessioniInMemoria  = [];
+let categorieContabilita = [];
+let squadreAttive = [];
+let atletaInModifica = null;
+let movimentoInModifica = null;
+let unsub = {};
+
+// ============================================================
+// AUTH
+// ============================================================
+auth.onAuthStateChanged(async utente => {
+  if (!utente) {
+    mostraSchermata('login');
+    return;
+  }
+  const doc = await db.collection('utenti').doc(utente.uid).get();
+  if (!doc.exists) {
+    await db.collection('utenti').doc(utente.uid).set({
+      email: utente.email,
+      nome: utente.displayName || utente.email.split('@')[0],
+      ruolo: 'visitor',
+      stato: 'in_attesa',
+      creato: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    mostraSchermata('attesa');
+    return;
+  }
+  const dati = doc.data();
+  if (dati.stato !== 'approvato') {
+    mostraSchermata('attesa');
+    return;
+  }
+  utenteCorrente = { uid: utente.uid, email: utente.email, ...dati };
+  ruoloCorrente  = dati.ruolo;
+  avviaApp();
+});
+
+function mostraSchermata(nome) {
+  document.getElementById('schermata-login').style.display  = nome === 'login'  ? 'flex'   : 'none';
+  document.getElementById('schermata-attesa').style.display = nome === 'attesa' ? 'flex'   : 'none';
+  document.getElementById('app').style.display              = nome === 'app'    ? 'flex'   : 'none';
+}
+
+async function eseguiLogin() {
+  const email = document.getElementById('input-email').value.trim();
+  const pw    = document.getElementById('input-password').value;
+  const err   = document.getElementById('login-errore');
+  err.style.display = 'none';
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+  } catch(e) {
+    err.textContent = 'Credenziali non valide. Riprova.';
+    err.style.display = 'block';
+  }
+}
+
+document.getElementById('input-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') eseguiLogin();
+});
+
+function eseguiLogout() {
+  Object.values(unsub).forEach(fn => { try { fn(); } catch(e) {} });
+  auth.signOut();
+}
+
+// ============================================================
+// AVVIO APP
+// ============================================================
+function avviaApp() {
+  document.getElementById('header-nome').textContent = utenteCorrente.nome || utenteCorrente.email;
+  document.getElementById('header-stagione').textContent = STAGIONE;
+  document.getElementById('login-stagione').textContent  = STAGIONE;
+
+  const classiRuolo = { admin:'badge-admin', editor:'badge-editor', superior:'badge-superior', visitor:'badge-visitor' };
+  const nomiRuolo   = { admin:'Admin', editor:'Editor', superior:'Superior', visitor:'Visitor' };
+  const badge = document.createElement('span');
+  badge.className = `badge-ruolo ${classiRuolo[ruoloCorrente] || 'badge-visitor'}`;
+  badge.textContent = nomiRuolo[ruoloCorrente] || ruoloCorrente;
+  document.getElementById('header-badge-ruolo').appendChild(badge);
+
+  if (ruoloCorrente === 'admin') {
+    document.getElementById('tab-admin').style.display = '';
+  }
+
+  // Permessi form
+  const pEdit = ['admin','editor'].includes(ruoloCorrente);
+  const pSup  = ['admin','editor','superior'].includes(ruoloCorrente);
+  if (!pEdit) {
+    ['form-movimento-card','form-sessione-card','btn-nuovo-atleta'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    document.getElementById('col-azioni-cont').style.display = 'none';
+  }
+
+  mostraSchermata('app');
+  impostaDatiDefault();
+  avviaListenersFirestore();
+}
+
+function impostaDatiDefault() {
+  const oggi = new Date().toISOString().split('T')[0];
+  ['mov-data','sess-data'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = oggi;
+  });
+}
+
+// ============================================================
+// LISTENERS FIRESTORE (onSnapshot)
+// ============================================================
+function avviaListenersFirestore() {
+  // Dati contabilità
+  unsub.cont = db.collection('gestionale_dinamo').doc('dati').onSnapshot(snap => {
+    const d = snap.data() || {};
+    categorieContabilita = d.categorie_contabilita || categorieDefaultContabilita();
+    squadreAttive        = d.squadre || [];
+    movimentiInMemoria   = d.movimenti || [];
+    sincronizzaUI();
+  });
+
+  // Atleti
+  unsub.atleti = db.collection('atleti_dinamo').onSnapshot(snap => {
+    atletiInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAtleti();
+    aggiornaSelectSquadre();
+  });
+
+  // Sessioni presenze
+  unsub.sess = db.collection('presenze_dinamo').orderBy('data','desc').onSnapshot(snap => {
+    sessioniInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderSessioni();
+  });
+
+  // Utenti (solo admin)
+  if (ruoloCorrente === 'admin') {
+    unsub.utenti = db.collection('utenti').onSnapshot(snap => {
+      renderUtentiAdmin(snap.docs.map(d => ({ uid: d.id, ...d.data() })));
+    });
+  }
+}
+
+function categorieDefaultContabilita() {
+  return [
+    { nome: 'Quote associative', tipo: 'entrata' },
+    { nome: 'Sponsorizzazioni', tipo: 'entrata' },
+    { nome: 'Contributi federali', tipo: 'entrata' },
+    { nome: 'Proventi vari', tipo: 'entrata' },
+    { nome: 'Affitto palestra', tipo: 'uscita' },
+    { nome: 'Acquisto materiale', tipo: 'uscita' },
+    { nome: 'Trasferte', tipo: 'uscita' },
+    { nome: 'Iscrizioni campionati', tipo: 'uscita' },
+    { nome: 'Spese amministrative', tipo: 'uscita' },
+    { nome: 'Altro', tipo: 'entrambi' },
+  ];
+}
+
+// ============================================================
+// SINCRONIZZAZIONE DATI → UI
+// ============================================================
+function sincronizzaUI() {
+  aggiornaSelectCategorie();
+  aggiornaKpiContabilita();
+  renderMovimenti();
+  if (ruoloCorrente === 'admin') {
+    renderCategorieAdmin();
+    renderSquadreAdmin();
+  }
+}
+
+function salvaDocumentoPrincipale() {
+  return db.collection('gestionale_dinamo').doc('dati').set({
+    movimenti: movimentiInMemoria,
+    categorie_contabilita: categorieContabilita,
+    squadre: squadreAttive,
+    aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
+    stagione: STAGIONE
+  }, { merge: true }).then(() => mostraBadge());
+}
+
+function mostraBadge() {
+  const b = document.getElementById('badge-salvataggio');
+  b.classList.add('visibile');
+  setTimeout(() => b.classList.remove('visibile'), 2200);
+}
+
+// ============================================================
+// NAVIGAZIONE
+// ============================================================
+function mostraSezione(nome, tab) {
+  ['contabilita','atleti','presenze','admin'].forEach(s => {
+    document.getElementById('sezione-' + s).style.display = s === nome ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('attivo'));
+  if (tab) tab.classList.add('attivo');
+  if (nome === 'presenze') aggiornaSelectSquadreSessione();
+}
+
+// ============================================================
+// CONTABILITÀ
+// ============================================================
+function aggiornaSelectCategorie() {
+  const tipo = document.getElementById('mov-tipo')?.value || 'entrata';
+  const selCat  = document.getElementById('mov-categoria');
+  const filtCat = document.getElementById('filtro-cat');
+  if (!selCat) return;
+  selCat.innerHTML = '';
+  filtCat.innerHTML = '<option value="tutti">Tutte</option>';
+  categorieContabilita
+    .filter(c => c.tipo === tipo || c.tipo === 'entrambi')
+    .forEach(c => {
+      selCat.innerHTML  += `<option>${c.nome}</option>`;
+      filtCat.innerHTML += `<option>${c.nome}</option>`;
+    });
+}
+
+document.getElementById('mov-tipo')?.addEventListener('change', aggiornaSelectCategorie);
+
+function aggiornaKpiContabilita() {
+  const mov = movimentiInMemoria;
+  const entrate  = mov.filter(m => m.tipo === 'entrata').reduce((s, m) => s + m.importo, 0);
+  const uscite   = mov.filter(m => m.tipo === 'uscita').reduce((s, m) => s + m.importo, 0);
+  const saldo    = entrate - uscite;
+  document.getElementById('kpi-entrate').textContent   = formatEuro(entrate);
+  document.getElementById('kpi-uscite').textContent    = formatEuro(uscite);
+  document.getElementById('kpi-saldo').textContent     = formatEuro(saldo);
+  document.getElementById('kpi-movimenti').textContent = mov.length;
+  const card = document.getElementById('kpi-saldo-card');
+  card.style.borderLeftColor = saldo >= 0 ? 'var(--verde)' : 'var(--rosso)';
+  document.getElementById('kpi-saldo').style.color = saldo >= 0 ? 'var(--verde)' : 'var(--rosso)';
+}
+
+function renderMovimenti() {
+  const tbody = document.getElementById('tbody-movimenti');
+  const periodo = document.getElementById('filtro-periodo')?.value || 'tutti';
+  const tipo    = document.getElementById('filtro-tipo')?.value || 'tutti';
+  const cat     = document.getElementById('filtro-cat')?.value || 'tutti';
+  const oggi    = new Date();
+
+  let mov = [...movimentiInMemoria].sort((a,b) => b.data.localeCompare(a.data));
+
+  if (periodo === 'mese') {
+    const mm = oggi.getFullYear() + '-' + String(oggi.getMonth()+1).padStart(2,'0');
+    mov = mov.filter(m => m.data.startsWith(mm));
+  } else if (periodo === 'trimestre') {
+    const tre = new Date(oggi); tre.setMonth(oggi.getMonth() - 3);
+    mov = mov.filter(m => m.data >= tre.toISOString().split('T')[0]);
+  }
+  if (tipo !== 'tutti') mov = mov.filter(m => m.tipo === tipo);
+  if (cat  !== 'tutti') mov = mov.filter(m => m.categoria === cat);
+
+  const pEdit = ['admin','editor'].includes(ruoloCorrente);
+  tbody.innerHTML = '';
+  if (!mov.length) {
+    document.getElementById('vuoto-contabilita').style.display = '';
+    return;
+  }
+  document.getElementById('vuoto-contabilita').style.display = 'none';
+  mov.forEach(m => {
+    const idx = movimentiInMemoria.findIndex(x => x.id === m.id);
+    tbody.innerHTML += `
+      <tr>
+        <td>${formatData(m.data)}</td>
+        <td><span class="chip ${m.tipo === 'entrata' ? 'chip-verde' : 'chip-rosso'}">${m.tipo.toUpperCase()}</span></td>
+        <td>${m.categoria || '—'}</td>
+        <td>${m.descrizione || '—'}</td>
+        <td style="font-weight:700; color:${m.tipo === 'entrata' ? 'var(--verde)' : 'var(--rosso)'}">
+          ${m.tipo === 'entrata' ? '+' : '-'}${formatEuro(m.importo)}
+        </td>
+        <td>
+          ${pEdit ? `<div style="display:flex;gap:6px;">
+            <button class="btn btn-secondario btn-piccolo" onclick="modificaMovimento('${m.id}')">✏️</button>
+            <button class="btn btn-pericolo btn-piccolo" onclick="eliminaMovimento('${m.id}')">🗑️</button>
+          </div>` : ''}
+        </td>
+      </tr>`;
+  });
+}
+
+function filtraMovimenti() { renderMovimenti(); }
+
+function aggiungiMovimento() {
+  const data  = document.getElementById('mov-data').value;
+  const tipo  = document.getElementById('mov-tipo').value;
+  const imp   = parseFloat(document.getElementById('mov-importo').value);
+  const cat   = document.getElementById('mov-categoria').value;
+  const desc  = document.getElementById('mov-descrizione').value.trim();
+  if (!data || isNaN(imp) || imp <= 0) { alert('Inserisci data e importo validi.'); return; }
+
+  if (movimentoInModifica) {
+    const idx = movimentiInMemoria.findIndex(m => m.id === movimentoInModifica);
+    if (idx >= 0) movimentiInMemoria[idx] = { id: movimentoInModifica, data, tipo, importo: imp, categoria: cat, descrizione: desc };
+    movimentoInModifica = null;
+    document.getElementById('btn-annulla-modifica').style.display = 'none';
+  } else {
+    movimentiInMemoria.push({ id: 'mov_' + Date.now(), data, tipo, importo: imp, categoria: cat, descrizione: desc });
+  }
+  salvaDocumentoPrincipale();
+  document.getElementById('mov-importo').value   = '';
+  document.getElementById('mov-descrizione').value = '';
+}
+
+function modificaMovimento(id) {
+  const m = movimentiInMemoria.find(x => x.id === id);
+  if (!m) return;
+  movimentoInModifica = id;
+  document.getElementById('mov-data').value       = m.data;
+  document.getElementById('mov-tipo').value       = m.tipo;
+  aggiornaSelectCategorie();
+  document.getElementById('mov-categoria').value  = m.categoria;
+  document.getElementById('mov-importo').value    = m.importo;
+  document.getElementById('mov-descrizione').value = m.descrizione || '';
+  document.getElementById('btn-annulla-modifica').style.display = '';
+  document.getElementById('form-movimento-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function annullaModifica() {
+  movimentoInModifica = null;
+  document.getElementById('btn-annulla-modifica').style.display = 'none';
+  document.getElementById('mov-importo').value = '';
+  document.getElementById('mov-descrizione').value = '';
+}
+
+function eliminaMovimento(id) {
+  if (!confirm('Eliminare questo movimento?')) return;
+  movimentiInMemoria = movimentiInMemoria.filter(m => m.id !== id);
+  salvaDocumentoPrincipale();
+}
+
+function esportaCSV() {
+  const righe = [['Data','Tipo','Categoria','Descrizione','Importo']];
+  movimentiInMemoria.forEach(m => righe.push([m.data, m.tipo, m.categoria, m.descrizione || '', m.importo]));
+  const csv = righe.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `dinamo_contabilita_${STAGIONE.replace('/','_')}.csv`;
+  a.click();
+}
+
+// ============================================================
+// ATLETI
+// ============================================================
+function aggiornaSelectSquadre() {
+  const sq = [...new Set(atletiInMemoria.map(a => a.squadra).filter(Boolean)), ...squadreAttive.filter(s => !atletiInMemoria.find(a => a.squadra === s))];
+  const selects = ['filtro-squadra-atleti','atl-squadra','sess-squadra'].map(id => document.getElementById(id)).filter(Boolean);
+  selects.forEach(sel => {
+    const corrente = sel.value;
+    const extra = sel.id === 'filtro-squadra-atleti' ? '<option value="tutti">Tutte le squadre</option>' : '<option value="">— nessuna —</option>';
+    sel.innerHTML = extra + [...new Set([...sq, ...squadreAttive])].map(s => `<option>${s}</option>`).join('');
+    if (corrente) sel.value = corrente;
+  });
+  document.getElementById('kpi-squadre').textContent = new Set(atletiInMemoria.map(a => a.squadra).filter(Boolean)).size;
+}
+
+function aggiornaSelectSquadreSessione() {
+  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  const sel = document.getElementById('sess-squadra');
+  sel.innerHTML = '<option value="">— nessuna —</option>' + sq.map(s => `<option>${s}</option>`).join('');
+}
+
+function filtraAtleti() {
+  const testo = document.getElementById('ricerca-atleta')?.value.toLowerCase() || '';
+  const sq    = document.getElementById('filtro-squadra-atleti')?.value || 'tutti';
+  let lista   = atletiInMemoria;
+  if (testo) lista = lista.filter(a => (a.nome + ' ' + a.cognome).toLowerCase().includes(testo));
+  if (sq !== 'tutti') lista = lista.filter(a => a.squadra === sq);
+  renderAtleti(lista);
+}
+
+function renderAtleti(lista) {
+  if (!lista) lista = atletiInMemoria;
+  const div = document.getElementById('lista-atleti');
+  const pEdit = ['admin','editor'].includes(ruoloCorrente);
+  document.getElementById('kpi-atleti-tot').textContent = atletiInMemoria.length;
+  document.getElementById('kpi-atleti-tesserati').textContent = atletiInMemoria.filter(a => a.stato_tess === 'tesserato').length;
+  const oggi = new Date().toISOString().split('T')[0];
+  const tra30 = new Date(); tra30.setDate(tra30.getDate() + 30);
+  document.getElementById('kpi-cert-scad').textContent = atletiInMemoria.filter(a => a.cert && a.cert <= tra30.toISOString().split('T')[0]).length;
+
+  if (!lista.length) {
+    div.innerHTML = '';
+    document.getElementById('vuoto-atleti').style.display = '';
+    return;
+  }
+  document.getElementById('vuoto-atleti').style.display = 'none';
+
+  const stati = { tesserato: 'chip-verde', in_corso: 'chip-giallo', non_tesserato: 'chip-rosso', sospeso: 'chip-grigio' };
+  const nomiStati = { tesserato: 'Tesserato', in_corso: 'In corso', non_tesserato: 'Non tesserato', sospeso: 'Sospeso' };
+
+  div.innerHTML = lista.map(a => `
+    <div class="atleta-card">
+      <div class="atleta-avatar">${(a.nome||'?')[0]}${(a.cognome||'')[0]}</div>
+      <div class="atleta-info">
+        <div class="atleta-nome">${a.nome} ${a.cognome}</div>
+        <div class="atleta-meta">${a.squadra || '—'} · ${a.ruolo || '—'} · <span class="chip ${stati[a.stato_tess]||'chip-grigio'}">${nomiStati[a.stato_tess]||'—'}</span></div>
+        ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
+      </div>
+      <div class="atleta-azioni">
+        ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : ''}
+        ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaAtleta('${a.id}')">🗑️</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function apriModalAtleta(id) {
+  atletaInModifica = id || null;
+  const modal = document.getElementById('modal-atleta');
+  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  document.getElementById('atl-squadra').innerHTML = '<option value="">— nessuna —</option>' + sq.map(s => `<option>${s}</option>`).join('');
+  if (id) {
+    const a = atletiInMemoria.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('modal-atleta-titolo').textContent = 'Modifica atleta';
+    document.getElementById('atl-nome').value = a.nome || '';
+    document.getElementById('atl-cognome').value = a.cognome || '';
+    document.getElementById('atl-nascita').value = a.nascita || '';
+    document.getElementById('atl-squadra').value = a.squadra || '';
+    document.getElementById('atl-ruolo').value = a.ruolo || '';
+    document.getElementById('atl-stato-tess').value = a.stato_tess || 'in_corso';
+    document.getElementById('atl-cert').value = a.cert || '';
+    document.getElementById('atl-telefono').value = a.telefono || '';
+    document.getElementById('atl-note').value = a.note || '';
+  } else {
+    document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
+    ['atl-nome','atl-cognome','atl-nascita','atl-cert','atl-telefono','atl-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('atl-stato-tess').value = 'in_corso';
+  }
+  modal.classList.add('aperto');
+}
+
+function chiudiModalAtleta() {
+  document.getElementById('modal-atleta').classList.remove('aperto');
+  atletaInModifica = null;
+}
+
+async function salvaAtleta() {
+  const nome = document.getElementById('atl-nome').value.trim();
+  const cognome = document.getElementById('atl-cognome').value.trim();
+  if (!nome || !cognome) { alert('Nome e cognome sono obbligatori.'); return; }
+  const dati = {
+    nome, cognome,
+    nascita:    document.getElementById('atl-nascita').value,
+    squadra:    document.getElementById('atl-squadra').value,
+    ruolo:      document.getElementById('atl-ruolo').value,
+    stato_tess: document.getElementById('atl-stato-tess').value,
+    cert:       document.getElementById('atl-cert').value,
+    telefono:   document.getElementById('atl-telefono').value.trim(),
+    note:       document.getElementById('atl-note').value.trim(),
+    aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
+    stagione:   STAGIONE
+  };
+  if (atletaInModifica) {
+    await db.collection('atleti_dinamo').doc(atletaInModifica).update(dati);
+  } else {
+    dati.creato = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('atleti_dinamo').add(dati);
+  }
+  mostraBadge();
+  chiudiModalAtleta();
+}
+
+async function eliminaAtleta(id) {
+  if (!confirm('Eliminare questo atleta?')) return;
+  await db.collection('atleti_dinamo').doc(id).delete();
+}
+
+// ============================================================
+// PRESENZE
+// ============================================================
+async function creaSessione() {
+  const data  = document.getElementById('sess-data').value;
+  const sq    = document.getElementById('sess-squadra').value;
+  const tipo  = document.getElementById('sess-tipo').value;
+  if (!data) { alert('Inserisci una data.'); return; }
+  const atletiSquadra = atletiInMemoria.filter(a => !sq || a.squadra === sq).map(a => ({ id: a.id, nome: a.nome + ' ' + a.cognome, presente: false }));
+  await db.collection('presenze_dinamo').add({
+    data, squadra: sq || 'Generale', tipo,
+    atleti: atletiSquadra,
+    stagione: STAGIONE,
+    creato: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  mostraBadge();
+}
+
+function renderSessioni() {
+  const div = document.getElementById('lista-sessioni');
+  document.getElementById('kpi-sessioni').textContent = sessioniInMemoria.length;
+  if (!sessioniInMemoria.length) {
+    div.innerHTML = '';
+    document.getElementById('vuoto-presenze').style.display = '';
+    return;
+  }
+  document.getElementById('vuoto-presenze').style.display = 'none';
+
+  let totalePres = 0, totaleAtleti = 0;
+  sessioniInMemoria.forEach(s => {
+    const tot = s.atleti?.length || 0;
+    const pres = s.atleti?.filter(a => a.presente).length || 0;
+    totaleAtleti += tot;
+    totalePres += pres;
+  });
+  document.getElementById('kpi-media-presenze').textContent = totaleAtleti ? Math.round(totalePres/totaleAtleti*100) + '%' : '—';
+
+  const pEdit = ['admin','editor','superior'].includes(ruoloCorrente);
+  div.innerHTML = sessioniInMemoria.map(sess => `
+    <div class="sessione-card">
+      <div class="sessione-header" onclick="toggleSessione('${sess.id}')">
+        <div>
+          <div class="sessione-data">${formatData(sess.data)} — ${sess.squadra}</div>
+          <div style="font-size:12px; opacity:0.7; margin-top:2px;">${sess.tipo || 'Allenamento'}</div>
+        </div>
+        <div class="sessione-stats">
+          ${(sess.atleti||[]).filter(a=>a.presente).length} / ${(sess.atleti||[]).length} presenti
+        </div>
+      </div>
+      <div class="sessione-body" id="sess-body-${sess.id}">
+        ${(sess.atleti||[]).length === 0 ? '<p style="color:var(--grigio-t); font-size:13px;">Nessun atleta in questa squadra al momento della creazione.</p>' :
+          (sess.atleti||[]).map(a => `
+            <div class="presenza-riga">
+              <span class="presenza-nome">${a.nome}</span>
+              ${pEdit ? `<div class="toggle-presenza">
+                <button class="${a.presente ? 'presente' : ''}" onclick="setPresenza('${sess.id}','${a.id}',true)">✓ Presente</button>
+                <button class="${!a.presente ? 'assente' : ''}" onclick="setPresenza('${sess.id}','${a.id}',false)">✗ Assente</button>
+              </div>` : `<span class="chip ${a.presente ? 'chip-verde':'chip-rosso'}">${a.presente ? 'Presente':'Assente'}</span>`}
+            </div>`).join('')
+        }
+        ${ruoloCorrente === 'admin' ? `<div style="margin-top:12px; text-align:right;">
+          <button class="btn btn-pericolo btn-piccolo" onclick="eliminaSessione('${sess.id}')">🗑️ Elimina sessione</button>
+        </div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSessione(id) {
+  const body = document.getElementById('sess-body-' + id);
+  body.classList.toggle('aperto');
+}
+
+async function setPresenza(sessId, atletaId, presente) {
+  const sess = sessioniInMemoria.find(s => s.id === sessId);
+  if (!sess) return;
+  const atleti = (sess.atleti || []).map(a => a.id === atletaId ? { ...a, presente } : a);
+  await db.collection('presenze_dinamo').doc(sessId).update({ atleti });
+  mostraBadge();
+}
+
+async function eliminaSessione(id) {
+  if (!confirm('Eliminare questa sessione?')) return;
+  await db.collection('presenze_dinamo').doc(id).delete();
+}
+
+// ============================================================
+// ADMIN — UTENTI
+// ============================================================
+function renderUtentiAdmin(utenti) {
+  const div = document.getElementById('lista-utenti-admin');
+  div.innerHTML = utenti.map(u => `
+    <div class="utente-riga">
+      <div class="utente-email">
+        <strong>${u.nome || u.email}</strong>
+        <div style="font-size:12px; color:var(--grigio-t);">${u.email}</div>
+      </div>
+      <div class="utente-stato-ctrl">
+        <select class="campo" style="max-width:130px;" onchange="cambiaRuolo('${u.uid}', this.value)">
+          ${['admin','editor','superior','visitor'].map(r => `<option ${u.ruolo===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+        <select class="campo" style="max-width:140px;" onchange="cambiaStato('${u.uid}', this.value)">
+          ${['approvato','in_attesa','sospeso'].map(s => `<option value="${s}" ${u.stato===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+
+function cambiaRuolo(uid, ruolo) {
+  db.collection('utenti').doc(uid).update({ ruolo });
+}
+function cambiaStato(uid, stato) {
+  db.collection('utenti').doc(uid).update({ stato });
+}
+
+// ADMIN — CATEGORIE CONTABILITÀ
+function renderCategorieAdmin() {
+  const div = document.getElementById('lista-categorie-cont');
+  div.innerHTML = categorieContabilita.map((c,i) => `
+    <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--grigio-m);">
+      <span style="flex:1; font-size:14px;">${c.nome}</span>
+      <span class="chip ${c.tipo==='entrata'?'chip-verde':c.tipo==='uscita'?'chip-rosso':'chip-blu'}">${c.tipo}</span>
+      <button class="btn btn-pericolo btn-piccolo" onclick="eliminaCategoria(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function aggiungiCategoria() {
+  const nome = document.getElementById('nuova-cat-cont').value.trim();
+  const tipo = document.getElementById('nuova-cat-tipo').value;
+  if (!nome) return;
+  categorieContabilita.push({ nome, tipo });
+  document.getElementById('nuova-cat-cont').value = '';
+  salvaDocumentoPrincipale();
+}
+
+function eliminaCategoria(i) {
+  if (!confirm('Eliminare questa categoria?')) return;
+  categorieContabilita.splice(i, 1);
+  salvaDocumentoPrincipale();
+}
+
+// ADMIN — SQUADRE
+function renderSquadreAdmin() {
+  const div = document.getElementById('lista-squadre-admin');
+  div.innerHTML = squadreAttive.map((s,i) => `
+    <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--grigio-m);">
+      <span style="flex:1; font-size:14px;">${s}</span>
+      <button class="btn btn-pericolo btn-piccolo" onclick="eliminaSquadra(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function aggiungiSquadra() {
+  const nome = document.getElementById('nuova-squadra').value.trim();
+  if (!nome || squadreAttive.includes(nome)) return;
+  squadreAttive.push(nome);
+  document.getElementById('nuova-squadra').value = '';
+  salvaDocumentoPrincipale();
+}
+
+function eliminaSquadra(i) {
+  if (!confirm('Eliminare questa squadra?')) return;
+  squadreAttive.splice(i, 1);
+  salvaDocumentoPrincipale();
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function formatEuro(n) {
+  return '€' + (n||0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function formatData(str) {
+  if (!str) return '—';
+  const [y,m,d] = str.split('-');
+  return `${d}/${m}/${y}`;
+}
+</script>
+</body>
+</html>
