@@ -1313,21 +1313,12 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cognome" placeholder="Cognome">
       </div>
     </div>
-    <div class="griglia-3" style="margin-top:10px;">
+    <!-- Riga: N°maglia (50%) + Ruolo + Squadra -->
+    <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr; gap:10px; margin-top:10px;">
       <div class="campo-gruppo">
         <label>N° maglia</label>
-        <input type="number" class="campo" id="atl-maglia" placeholder="Es. 10" min="1" max="99">
+        <input type="number" class="campo" id="atl-maglia" placeholder="10" min="1" max="99">
       </div>
-      <div class="campo-gruppo">
-        <label>Data di nascita</label>
-        <input type="date" class="campo" id="atl-nascita">
-      </div>
-      <div class="campo-gruppo">
-        <label>Squadra</label>
-        <select class="campo" id="atl-squadra"></select>
-      </div>
-    </div>
-    <div class="griglia-2" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Ruolo</label>
         <select class="campo" id="atl-ruolo">
@@ -1341,16 +1332,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </select>
       </div>
       <div class="campo-gruppo">
-        <label>Stato tesseramento</label>
-        <select class="campo" id="atl-stato-tess">
-          <option value="in_corso">In corso</option>
-          <option value="tesserato">Tesserato</option>
-          <option value="non_tesserato">Non tesserato</option>
-          <option value="sospeso">Sospeso</option>
-        </select>
+        <label>Squadra</label>
+        <select class="campo" id="atl-squadra"></select>
       </div>
     </div>
-    <div class="griglia-2" style="margin-top:10px;">
+    <!-- Riga: Data nascita + Luogo nascita + Codice fiscale -->
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Data di nascita</label>
+        <input type="date" class="campo" id="atl-nascita">
+      </div>
       <div class="campo-gruppo">
         <label>Luogo di nascita</label>
         <input type="text" class="campo" id="atl-luogo-nascita" placeholder="Città">
@@ -1360,6 +1351,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
       </div>
     </div>
+    <!-- Riga: Altezza + Peso + Stato tesseramento -->
     <div class="griglia-3" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Altezza (cm)</label>
@@ -1370,23 +1362,54 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="number" class="campo" id="atl-peso" placeholder="Es. 80" min="30" max="200">
       </div>
       <div class="campo-gruppo">
+        <label>Stato tesseramento</label>
+        <select class="campo" id="atl-stato-tess">
+          <option value="in_corso">In corso</option>
+          <option value="tesserato">Tesserato</option>
+          <option value="non_tesserato">Non tesserato</option>
+          <option value="sospeso">Sospeso</option>
+        </select>
+      </div>
+    </div>
+    <!-- Residenza su campi separati -->
+    <div style="margin-top:10px;">
+      <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:6px;">Residenza</label>
+      <div class="campo-gruppo" style="margin-bottom:8px;">
+        <label>Via / indirizzo</label>
+        <input type="text" class="campo" id="atl-via" placeholder="Via Roma, 1">
+      </div>
+      <div style="display:grid; grid-template-columns:0.6fr 1fr 0.4fr; gap:10px;">
+        <div class="campo-gruppo">
+          <label>CAP</label>
+          <input type="text" class="campo" id="atl-cap" placeholder="70056" maxlength="5">
+        </div>
+        <div class="campo-gruppo">
+          <label>Città</label>
+          <input type="text" class="campo" id="atl-citta" placeholder="Molfetta">
+        </div>
+        <div class="campo-gruppo">
+          <label>PR</label>
+          <input type="text" class="campo" id="atl-pr" placeholder="BA" maxlength="2" style="text-transform:uppercase;">
+        </div>
+      </div>
+    </div>
+    <!-- Riga: Telefono + Email -->
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Telefono</label>
+        <input type="text" class="campo" id="atl-telefono" placeholder="Es. 333 1234567">
+      </div>
+      <div class="campo-gruppo">
         <label>Email</label>
         <input type="email" class="campo" id="atl-email" placeholder="atleta@email.com">
       </div>
     </div>
+    <!-- Riga: Cert. medico -->
     <div class="griglia-2" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Scad. certificato medico</label>
         <input type="date" class="campo" id="atl-cert">
       </div>
-      <div class="campo-gruppo">
-        <label>Telefono / contatto</label>
-        <input type="text" class="campo" id="atl-telefono" placeholder="Opzionale">
-      </div>
-    </div>
-    <div class="campo-gruppo" style="margin-top:10px;">
-      <label>Indirizzo</label>
-      <input type="text" class="campo" id="atl-indirizzo" placeholder="Via, città, CAP">
     </div>
     <div class="campo-gruppo" style="margin-top:10px;">
       <label>Note</label>
@@ -1869,11 +1892,14 @@ function apriModalAtleta(id) {
     document.getElementById('atl-luogo-nascita').value = a.luogo_nascita || '';
     document.getElementById('atl-altezza').value = a.altezza || '';
     document.getElementById('atl-peso').value = a.peso || '';
-    document.getElementById('atl-indirizzo').value = a.indirizzo || '';
+    document.getElementById('atl-via').value = a.via || '';
+    document.getElementById('atl-cap').value = a.cap || '';
+    document.getElementById('atl-citta').value = a.citta || '';
+    document.getElementById('atl-pr').value = a.pr || '';
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-indirizzo','atl-note'].forEach(id => document.getElementById(id).value = '');
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   modal.classList.add('aperto');
@@ -1902,7 +1928,10 @@ async function salvaAtleta() {
     luogo_nascita: document.getElementById('atl-luogo-nascita').value.trim(),
     altezza:       document.getElementById('atl-altezza').value ? parseInt(document.getElementById('atl-altezza').value) : null,
     peso:          document.getElementById('atl-peso').value ? parseInt(document.getElementById('atl-peso').value) : null,
-    indirizzo:     document.getElementById('atl-indirizzo').value.trim(),
+    via:           document.getElementById('atl-via').value.trim(),
+    cap:           document.getElementById('atl-cap').value.trim(),
+    citta:         document.getElementById('atl-citta').value.trim(),
+    pr:            document.getElementById('atl-pr').value.trim().toUpperCase(),
     note:          document.getElementById('atl-note').value.trim(),
     aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
     stagione:   STAGIONE
