@@ -1172,12 +1172,26 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </select>
         <button class="btn btn-secondario" id="btn-ordina-cognome" onclick="toggleOrdineCognome(this)">A↓ Ordina per cognome</button>
         <button class="btn btn-primario" id="btn-nuovo-atleta" onclick="apriModalAtleta()">➕ Nuovo atleta</button>
+        <button class="btn btn-secondario" id="btn-nuovo-staff" onclick="apriModalStaff()">👔 Nuovo staff</button>
       </div>
 
       <div id="lista-atleti"></div>
       <div class="stato-vuoto" id="vuoto-atleti" style="display:none;">
         <div class="icona-grande">🏐</div>
         <p>Nessun atleta registrato</p>
+      </div>
+
+      <!-- LISTA STAFF -->
+      <div style="margin-top:24px;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--grigio-t);margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+          <span>👔 Staff tecnico / dirigenziale</span>
+          <span id="kpi-staff-tot" style="background:var(--blu-l);color:var(--blu);font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;">0</span>
+        </div>
+        <div id="lista-staff"></div>
+        <div class="stato-vuoto" id="vuoto-staff" style="display:none;">
+          <div class="icona-grande">👔</div>
+          <p>Nessun membro dello staff registrato</p>
+        </div>
       </div>
     </section>
 
@@ -1678,6 +1692,100 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 <!-- BADGE SALVATAGGIO -->
 <div id="badge-salvataggio">✅ Salvato</div>
 
+
+<!-- MODAL STAFF -->
+<div class="modal-overlay" id="modal-staff">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-titolo">
+      <span id="modal-staff-titolo">Nuovo membro staff</span>
+      <button class="modal-chiudi" onclick="chiudiModalStaff()">×</button>
+    </div>
+    <!-- Nome + Cognome -->
+    <div class="griglia-2">
+      <div class="campo-gruppo">
+        <label>Nome *</label>
+        <input type="text" class="campo" id="stf-nome" placeholder="Nome">
+      </div>
+      <div class="campo-gruppo">
+        <label>Cognome *</label>
+        <input type="text" class="campo" id="stf-cognome" placeholder="Cognome">
+      </div>
+    </div>
+    <!-- Data nascita + Luogo nascita + CF -->
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Data di nascita</label>
+        <input type="date" class="campo" id="stf-nascita">
+      </div>
+      <div class="campo-gruppo">
+        <label>Luogo di nascita</label>
+        <input type="text" class="campo" id="stf-luogo-nascita" placeholder="Città">
+      </div>
+      <div class="campo-gruppo">
+        <label>Codice fiscale</label>
+        <input type="text" class="campo" id="stf-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
+      </div>
+    </div>
+    <!-- Ruolo + Codice Fipav -->
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Ruolo *</label>
+        <select class="campo" id="stf-ruolo">
+          <option value="">— seleziona —</option>
+          <option value="Allenatore">Allenatore</option>
+          <option value="Dirigente Acc.">Dirigente Acc.</option>
+        </select>
+      </div>
+      <div class="campo-gruppo">
+        <label>Codice Fipav</label>
+        <input type="text" class="campo" id="stf-fipav" placeholder="Codice numerico">
+      </div>
+    </div>
+    <!-- Residenza -->
+    <div style="margin-top:12px;">
+      <label style="font-size:12px;font-weight:600;color:var(--testo-m);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">Residenza</label>
+      <div class="campo-gruppo" style="margin-bottom:8px;">
+        <label>Via / indirizzo</label>
+        <input type="text" class="campo" id="stf-via" placeholder="Via Roma, 1">
+      </div>
+      <div style="display:grid;grid-template-columns:0.6fr 1fr 0.4fr;gap:10px;">
+        <div class="campo-gruppo">
+          <label>CAP</label>
+          <input type="text" class="campo" id="stf-cap" placeholder="70056" maxlength="5">
+        </div>
+        <div class="campo-gruppo">
+          <label>Città</label>
+          <input type="text" class="campo" id="stf-citta" placeholder="Molfetta">
+        </div>
+        <div class="campo-gruppo">
+          <label>PR</label>
+          <input type="text" class="campo" id="stf-pr" placeholder="BA" maxlength="2" style="text-transform:uppercase;">
+        </div>
+      </div>
+    </div>
+    <!-- Telefono + Email -->
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Telefono</label>
+        <input type="text" class="campo" id="stf-telefono" placeholder="Es. 333 1234567">
+      </div>
+      <div class="campo-gruppo">
+        <label>Email</label>
+        <input type="email" class="campo" id="stf-email" placeholder="email@esempio.com">
+      </div>
+    </div>
+    <!-- Note -->
+    <div class="campo-gruppo" style="margin-top:10px;">
+      <label>Note</label>
+      <input type="text" class="campo" id="stf-note" placeholder="Note libere">
+    </div>
+    <div class="modal-azioni">
+      <button class="btn btn-secondario" onclick="chiudiModalStaff()">Annulla</button>
+      <button class="btn btn-primario" onclick="salvaStaff()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ATLETA -->
 <div class="modal-overlay" id="modal-atleta">
   <div class="modal">
@@ -1786,24 +1894,6 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       </div>
     </div>
 
-    <!-- SEZIONE STAFF (Allenatore / Dirigente Acc.) -->
-    <div style="margin-top:16px; padding:14px; background:var(--blu-l); border-radius:var(--raggio); border-left:4px solid var(--blu);">
-      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;">Staff tecnico / dirigenziale</div>
-      <div class="griglia-2">
-        <div class="campo-gruppo">
-          <label>Ruolo staff</label>
-          <select class="campo" id="atl-ruolo-staff">
-            <option value="">— nessuno —</option>
-            <option value="Allenatore">Allenatore</option>
-            <option value="Dirigente Acc.">Dirigente Acc.</option>
-          </select>
-        </div>
-        <div class="campo-gruppo">
-          <label>Codice Fipav staff</label>
-          <input type="text" class="campo" id="atl-fipav-staff" placeholder="Codice numerico">
-        </div>
-      </div>
-    </div>
     <div class="campo-gruppo" style="margin-top:10px;">
       <label>Note</label>
       <input type="text" class="campo" id="atl-note" placeholder="Note libere">
@@ -1997,6 +2087,8 @@ function avviaListenersFirestore() {
   });
 
   avviaListenerPartite();
+
+  avviaListenerStaff();
 
   // Utenti (solo admin)
   if (ruoloCorrente === 'admin') {
@@ -2311,10 +2403,7 @@ function apriModalAtleta(id) {
     document.getElementById('atl-squadra').value = a.squadra || '';
     document.getElementById('atl-ruolo').value = a.ruolo || '';
     document.getElementById('atl-fipav').value = a.fipav || '';
-    const ruoloStaffEl = document.getElementById('atl-ruolo-staff');
-    const fipavStaffEl = document.getElementById('atl-fipav-staff');
-    if (ruoloStaffEl) ruoloStaffEl.value = a.ruolo_staff || '';
-    if (fipavStaffEl) fipavStaffEl.value = a.fipav_staff || '';
+
     document.getElementById('atl-cert').value = a.cert || '';
     document.getElementById('atl-telefono').value = a.telefono || '';
     document.getElementById('atl-email').value = a.email || '';
@@ -2329,8 +2418,7 @@ function apriModalAtleta(id) {
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-fipav-staff','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    const rse = document.getElementById('atl-ruolo-staff'); if(rse) rse.value = '';
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
   }
@@ -2362,8 +2450,6 @@ async function salvaAtleta() {
     maglia:         g('atl-maglia')?.value ? parseInt(g('atl-maglia').value) : null,
     ruolo:          g('atl-ruolo')?.value || '',
     fipav:          g('atl-fipav')?.value?.trim() || '',
-    ruolo_staff:    g('atl-ruolo-staff')?.value || '',
-    fipav_staff:    g('atl-fipav-staff')?.value?.trim() || '',
     cert:           g('atl-cert')?.value || '',
     telefono:       g('atl-telefono')?.value?.trim() || '',
     email:          g('atl-email')?.value?.trim() || '',
@@ -3293,6 +3379,143 @@ function renderStagioniInScheda(stagioni) {
   `).join('');
 }
 
+
+
+// ============================================================
+// STAFF TECNICO / DIRIGENZIALE
+// ============================================================
+let staffInMemoria = [];
+let staffInModifica = null;
+
+function avviaListenerStaff() {
+  unsub.staff = db.collection('staff_dinamo').onSnapshot(snap => {
+    staffInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStaff();
+  });
+}
+
+function renderStaff() {
+  const div = document.getElementById('lista-staff');
+  const kpi = document.getElementById('kpi-staff-tot');
+  if (!div) return;
+  if (kpi) kpi.textContent = staffInMemoria.length;
+  const pEdit = ['admin','editor'].includes(ruoloCorrente);
+
+  if (!staffInMemoria.length) {
+    div.innerHTML = '';
+    document.getElementById('vuoto-staff').style.display = '';
+    return;
+  }
+  document.getElementById('vuoto-staff').style.display = 'none';
+
+  const lista = [...staffInMemoria].sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+  div.innerHTML = lista.map(s => `
+    <div class="atleta-card">
+      <div class="atleta-avatar" style="background:var(--blu-l);color:var(--blu);">${(s.cognome||'?')[0]}${(s.nome||'?')[0]}</div>
+      <div class="atleta-info">
+        <div class="atleta-nome">${s.cognome} ${s.nome}</div>
+        <div class="atleta-meta">
+          <span class="chip chip-blu">${s.ruolo||'—'}</span>
+          ${s.fipav ? '<span style="font-size:12px;color:var(--grigio-t);margin-left:6px;">Fipav: '+s.fipav+'</span>' : ''}
+        </div>
+      </div>
+      <div class="atleta-azioni">
+        <button class="btn btn-secondario btn-piccolo" onclick="visualizzaStaff('${s.id}')">👁️</button>
+        ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalStaff('${s.id}')">✏️</button>` : ''}
+        ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaStaff('${s.id}')">🗑️</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function apriModalStaff(id) {
+  staffInModifica = id || null;
+  const campi = ['stf-nome','stf-cognome','stf-nascita','stf-luogo-nascita','stf-cf','stf-fipav','stf-via','stf-cap','stf-citta','stf-pr','stf-telefono','stf-email','stf-note'];
+  if (id) {
+    const s = staffInMemoria.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('modal-staff-titolo').textContent = 'Modifica staff';
+    document.getElementById('stf-nome').value = s.nome || '';
+    document.getElementById('stf-cognome').value = s.cognome || '';
+    document.getElementById('stf-nascita').value = s.nascita || '';
+    document.getElementById('stf-luogo-nascita').value = s.luogo_nascita || '';
+    document.getElementById('stf-cf').value = s.cf || '';
+    document.getElementById('stf-ruolo').value = s.ruolo || '';
+    document.getElementById('stf-fipav').value = s.fipav || '';
+    document.getElementById('stf-via').value = s.via || '';
+    document.getElementById('stf-cap').value = s.cap || '';
+    document.getElementById('stf-citta').value = s.citta || '';
+    document.getElementById('stf-pr').value = s.pr || '';
+    document.getElementById('stf-telefono').value = s.telefono || '';
+    document.getElementById('stf-email').value = s.email || '';
+    document.getElementById('stf-note').value = s.note || '';
+  } else {
+    document.getElementById('modal-staff-titolo').textContent = 'Nuovo membro staff';
+    campi.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    document.getElementById('stf-ruolo').value = '';
+  }
+  document.getElementById('modal-staff').classList.add('aperto');
+}
+
+function chiudiModalStaff() {
+  document.getElementById('modal-staff').classList.remove('aperto');
+  staffInModifica = null;
+}
+
+async function salvaStaff() {
+  const nome = document.getElementById('stf-nome').value.trim();
+  const cognome = document.getElementById('stf-cognome').value.trim();
+  const ruolo = document.getElementById('stf-ruolo').value;
+  if (!nome || !cognome) { alert('Nome e cognome sono obbligatori.'); return; }
+  if (!ruolo) { alert('Seleziona un ruolo.'); return; }
+  const g = id => document.getElementById(id);
+  const dati = {
+    nome, cognome, ruolo,
+    nascita:       g('stf-nascita')?.value || '',
+    luogo_nascita: g('stf-luogo-nascita')?.value?.trim() || '',
+    cf:            g('stf-cf')?.value?.trim().toUpperCase() || '',
+    fipav:         g('stf-fipav')?.value?.trim() || '',
+    via:           g('stf-via')?.value?.trim() || '',
+    cap:           g('stf-cap')?.value?.trim() || '',
+    citta:         g('stf-citta')?.value?.trim() || '',
+    pr:            g('stf-pr')?.value?.trim().toUpperCase() || '',
+    telefono:      g('stf-telefono')?.value?.trim() || '',
+    email:         g('stf-email')?.value?.trim() || '',
+    note:          g('stf-note')?.value?.trim() || '',
+    stagione:      stagioneSel || STAGIONE,
+    aggiornato:    firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (staffInModifica) {
+    await db.collection('staff_dinamo').doc(staffInModifica).update(dati);
+  } else {
+    dati.creato = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('staff_dinamo').add(dati);
+  }
+  mostraBadge();
+  chiudiModalStaff();
+}
+
+async function eliminaStaff(id) {
+  if (!confirm('Eliminare questo membro dello staff?')) return;
+  await db.collection('staff_dinamo').doc(id).delete();
+}
+
+function visualizzaStaff(id) {
+  const s = staffInMemoria.find(x => x.id === id);
+  if (!s) return;
+  const fmt = v => { if(!v) return '—'; const [y,m,g] = v.split('-'); return g+'/'+m+'/'+y; };
+  const val = v => v || '—';
+  const indirizzo = [s.via, s.cap, s.citta, s.pr].filter(Boolean).join(', ') || '—';
+  alert(`👔 ${s.cognome} ${s.nome}\n` +
+    `Ruolo: ${val(s.ruolo)}\n` +
+    `Fipav: ${val(s.fipav)}\n` +
+    `Nascita: ${fmt(s.nascita)} - ${val(s.luogo_nascita)}\n` +
+    `CF: ${val(s.cf)}\n` +
+    `Indirizzo: ${indirizzo}\n` +
+    `Tel: ${val(s.telefono)} | Email: ${val(s.email)}\n` +
+    `Note: ${val(s.note)}`
+  );
+}
 
 </script>
 </body>
