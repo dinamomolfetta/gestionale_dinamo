@@ -1282,6 +1282,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </div>
       </div>
     </div>
+    <div style="margin-top:14px;">
+      <label style="font-size:12px;font-weight:600;color:var(--testo-m);text-transform:uppercase;letter-spacing:0.4px;">Giocatori in campo</label>
+      <div id="mpar-giocatori-lista" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;max-height:200px;overflow-y:auto;"></div>
+    </div>
     <div class="modal-azioni">
       <button class="btn btn-secondario" onclick="chiudiModalPartita()">Annulla</button>
       <button class="btn btn-primario" onclick="aggiornaPartita()">💾 Salva</button>
@@ -2446,6 +2450,17 @@ function apriModalPartita(id) {
     document.getElementById('mpar-s'+i+'d').value = s ? s.dinamo : '';
     document.getElementById('mpar-s'+i+'a').value = s ? s.avversario : '';
   }
+  // Carica giocatori con checkbox — ordinati per cognome
+  const giocatoriInPartita = (p.giocatori || []).map(g => g.id);
+  const listaAtleti = [...atletiInMemoria].sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+  const div = document.getElementById('mpar-giocatori-lista');
+  div.innerHTML = listaAtleti.map(a => `
+    <label style="display:flex;align-items:center;gap:6px;background:var(--grigio-s);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px;">
+      <input type="checkbox" value="${a.id}" data-nome="${a.cognome} ${a.nome}" style="accent-color:var(--arancio);" ${giocatoriInPartita.includes(a.id) ? 'checked' : ''}>
+      ${a.maglia ? '<span style="font-size:11px;font-weight:700;color:var(--arancio);min-width:24px;">#'+a.maglia+'</span>' : '<span style="min-width:24px;"></span>'}
+      <span>${a.cognome} ${a.nome}</span>
+    </label>
+  `).join('');
   document.getElementById('modal-partita').classList.add('aperto');
 }
 
@@ -2465,12 +2480,18 @@ async function aggiornaPartita() {
     if (d !== '' && a !== '') setPunteggi.push({ set: i, dinamo: parseInt(d)||0, avversario: parseInt(a)||0 });
   }
   const esito = setD > setA ? 'vittoria' : setD < setA ? 'sconfitta' : 'pareggio';
+  // Raccogli giocatori selezionati
+  const giocatori = [];
+  document.querySelectorAll('#mpar-giocatori-lista input[type=checkbox]:checked').forEach(cb => {
+    giocatori.push({ id: cb.value, nome: cb.dataset.nome });
+  });
   await db.collection('partite_dinamo').doc(partitaInModifica).update({
     data: document.getElementById('mpar-data').value,
     avversario: document.getElementById('mpar-avversario').value.trim(),
     luogo: document.getElementById('mpar-luogo').value,
     competizione: document.getElementById('mpar-competizione').value.trim(),
-    set_dinamo: setD, set_avversario: setA, set_punteggi: setPunteggi, esito,
+    set_dinamo: setD, set_avversario: setA, set_punteggi: setPunteggi,
+    esito, giocatori,
     aggiornato: firebase.firestore.FieldValue.serverTimestamp()
   });
   mostraBadge();
