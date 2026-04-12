@@ -2308,7 +2308,7 @@ function apriModalAtleta(id) {
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
     aggiornaVisibilitaCampiAtleta();
