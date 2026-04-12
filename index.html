@@ -2300,6 +2300,14 @@ function apriModalAtleta(id) {
     ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
+  // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
+  if (id) {
+    const a2 = atletiInMemoria.find(x => x.id === id);
+    stagioniAtletaTemp = a2 && a2.stagioni ? JSON.parse(JSON.stringify(a2.stagioni)) : [];
+  } else {
+    stagioniAtletaTemp = [];
+  }
+  renderStagioniAtleta(stagioniAtletaTemp);
   modal.classList.add('aperto');
 }
 
@@ -2550,13 +2558,13 @@ function renderPresenzaPartita() {
   const stagPar = document.getElementById('par-stagione')?.value || stagioneSel;
   const sqPar   = document.getElementById('par-squadra-gare')?.value || '';
 
-  // Filtra atleti che hanno una stagione corrispondente (e squadra se selezionata)
+  // Filtra atleti: devono avere registrazione per quella stagione (e squadra se filtrata)
   const atletiFiltrati = atletiInMemoria.filter(a => {
     const stagioni = a.stagioni || [];
-    if (!stagioni.length) return true; // se non ha stagioni mostralo comunque
+    if (!stagioni.length) return false; // escludi atleti senza stagioni registrate
     return stagioni.some(s => {
-      const stMatch = !stagPar || s.stagione === stagPar;
-      const sqMatch = !sqPar || s.squadra === sqPar;
+      const stMatch = stagPar ? s.stagione === stagPar : true;
+      const sqMatch = sqPar ? s.squadra === sqPar : true;
       return stMatch && sqMatch;
     });
   }).sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
