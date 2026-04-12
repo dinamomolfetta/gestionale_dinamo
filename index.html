@@ -1535,8 +1535,9 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
           <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Tesseramento</div>
           <table style="width:100%;font-size:14px;">
-            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Stato</td><td id="va-stato" style="font-weight:500;"></td></tr>
-            <tr><td style="color:var(--testo-m);padding:5px 0;">Cert. medico</td><td id="va-cert" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Codice Fipav</td><td id="va-fipav" style="font-weight:500;font-family:monospace;"></td></tr>
+            <tr id="va-cert-row"><td style="color:var(--testo-m);padding:5px 0;">Cert. medico</td><td id="va-cert" style="font-weight:500;"></td></tr>
+            <tr id="va-maglia-row"><td style="color:var(--testo-m);padding:5px 0;">N° maglia</td><td id="va-maglia-val" style="font-weight:500;"></td></tr>
           </table>
         </div>
       </div>
@@ -1778,11 +1779,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="email" class="campo" id="atl-email" placeholder="atleta@email.com">
       </div>
     </div>
-    <!-- Riga: Cert. medico -->
-    <div class="griglia-2" style="margin-top:10px;">
+    <!-- Riga: Cert. medico (solo per giocatori) -->
+    <div class="griglia-2" id="campi-cert" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Scad. certificato medico</label>
         <input type="date" class="campo" id="atl-cert">
+      </div>
+      <!-- Numero maglia solo per giocatori -->
+      <div class="campo-gruppo">
+        <label>N° maglia</label>
+        <input type="number" class="campo" id="atl-maglia" placeholder="10" min="1" max="99">
       </div>
     </div>
     <div class="campo-gruppo" style="margin-top:10px;">
@@ -2291,7 +2297,9 @@ function apriModalAtleta(id) {
     document.getElementById('atl-nascita').value = a.nascita || '';
     document.getElementById('atl-squadra').value = a.squadra || '';
     document.getElementById('atl-ruolo').value = a.ruolo || '';
+    aggiornaVisibilitaCampiAtleta();
     document.getElementById('atl-stato-tess').value = a.stato_tess || 'in_corso';
+    document.getElementById('atl-fipav').value = a.fipav || '';
     document.getElementById('atl-cert').value = a.cert || '';
     document.getElementById('atl-telefono').value = a.telefono || '';
     document.getElementById('atl-email').value = a.email || '';
@@ -2306,9 +2314,10 @@ function apriModalAtleta(id) {
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
+    aggiornaVisibilitaCampiAtleta();
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
@@ -2337,7 +2346,7 @@ async function salvaAtleta() {
     squadra:    document.getElementById('atl-squadra').value,
     maglia:        document.getElementById('atl-maglia')?.value ? parseInt(document.getElementById('atl-maglia').value) : null,
     ruolo:         document.getElementById('atl-ruolo').value,
-    stato_tess:    document.getElementById('atl-stato-tess').value,
+    fipav:         document.getElementById('atl-fipav').value.trim(),
     cert:          document.getElementById('atl-cert').value,
     telefono:      document.getElementById('atl-telefono').value.trim(),
     email:         document.getElementById('atl-email').value.trim(),
@@ -3039,11 +3048,9 @@ function visualizzaAtleta(id) {
   const magliaChip = document.getElementById('va-maglia-chip');
   magliaChip.textContent = a.maglia ? '#' + a.maglia : '—';
 
-  const stati = { tesserato:'Tesserato', in_corso:'In corso', non_tesserato:'Non tesserato', sospeso:'Sospeso' };
-  const classiStato = { tesserato:'chip-verde', in_corso:'chip-giallo', non_tesserato:'chip-rosso', sospeso:'chip-grigio' };
   const statoChip = document.getElementById('va-stato-chip');
-  statoChip.textContent = stati[a.stato_tess] || '—';
-  statoChip.className = 'chip ' + (classiStato[a.stato_tess] || 'chip-grigio');
+  statoChip.textContent = a.fipav ? 'Fipav: ' + a.fipav : '';
+  statoChip.className = a.fipav ? 'chip chip-blu' : '';
 
   document.getElementById('va-nascita').textContent = fmt(a.nascita);
   document.getElementById('va-luogo-nascita').textContent = val(a.luogo_nascita);
@@ -3056,8 +3063,15 @@ function visualizzaAtleta(id) {
   document.getElementById('va-cap').textContent = val(a.cap);
   document.getElementById('va-citta').textContent = val(a.citta);
   document.getElementById('va-pr').textContent = val(a.pr);
-  document.getElementById('va-stato').textContent = stati[a.stato_tess] || '—';
+  document.getElementById('va-fipav').textContent = a.fipav || '—';
   document.getElementById('va-cert').textContent = fmt(a.cert);
+  const isStaff = a.ruolo === 'Allenatore' || a.ruolo === 'Dirigente Acc.';
+  const certRow = document.getElementById('va-cert-row');
+  const magRow = document.getElementById('va-maglia-row');
+  if (certRow) certRow.style.display = isStaff ? 'none' : '';
+  if (magRow) magRow.style.display = isStaff ? 'none' : '';
+  const magVal = document.getElementById('va-maglia-val');
+  if (magVal) magVal.textContent = a.maglia ? '#' + a.maglia : '—';
 
   const noteBox = document.getElementById('va-note-box');
   if (a.note) {
@@ -3248,6 +3262,16 @@ function renderStagioniInScheda(stagioni) {
       <span style="font-size:13px;color:var(--testo-m);">${s.squadra||'—'}</span>
     </div>
   `).join('');
+}
+
+
+function aggiornaVisibilitaCampiAtleta() {
+  const ruolo = document.getElementById('atl-ruolo')?.value || '';
+  const isStaff = ruolo === 'Allenatore' || ruolo === 'Dirigente Acc.';
+  const campiGiocatore = document.getElementById('campi-giocatore');
+  const campiCert = document.getElementById('campi-cert');
+  if (campiGiocatore) campiGiocatore.style.display = isStaff ? 'none' : '';
+  if (campiCert) campiCert.style.display = isStaff ? 'none' : '';
 }
 
 </script>
