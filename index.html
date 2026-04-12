@@ -783,6 +783,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
     <button class="nav-tab attivo" onclick="mostraSezione('contabilita', this)">💰 Contabilità</button>
     <button class="nav-tab" onclick="mostraSezione('atleti', this)">🏐 Atleti</button>
     <button class="nav-tab" onclick="mostraSezione('presenze', this)">📋 Presenze</button>
+    <button class="nav-tab" onclick="mostraSezione('statistiche', this)">📈 Statistiche</button>
     <button class="nav-tab" id="tab-admin" style="display:none" onclick="mostraSezione('admin', this)">⚙️ Admin</button>
   </nav>
 
@@ -985,6 +986,172 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       </div>
     </section>
 
+
+    <!-- ===== STATISTICHE ===== -->
+    <section id="sezione-statistiche" style="display:none;">
+
+      <!-- KPI stagione -->
+      <div class="kpi-griglia">
+        <div class="kpi blu">
+          <div class="kpi-val" id="stat-pg">0</div>
+          <div class="kpi-lab">Partite giocate</div>
+        </div>
+        <div class="kpi verde">
+          <div class="kpi-val" id="stat-vinte">0</div>
+          <div class="kpi-lab">Vittorie</div>
+        </div>
+        <div class="kpi rosso">
+          <div class="kpi-val" id="stat-perse">0</div>
+          <div class="kpi-lab">Sconfitte</div>
+        </div>
+        <div class="kpi" style="border-left-color:var(--arancio)">
+          <div class="kpi-val" id="stat-perc">0%</div>
+          <div class="kpi-lab">% vittorie</div>
+        </div>
+        <div class="kpi blu">
+          <div class="kpi-val" id="stat-sv">0</div>
+          <div class="kpi-lab">Set vinti</div>
+        </div>
+        <div class="kpi rosso">
+          <div class="kpi-val" id="stat-sp">0</div>
+          <div class="kpi-lab">Set persi</div>
+        </div>
+      </div>
+
+      <!-- Form nuova partita -->
+      <div class="card" id="form-partita-card">
+        <div class="card-titolo"><span class="icona">➕</span> Registra partita</div>
+        <div class="griglia-3">
+          <div class="campo-gruppo">
+            <label>Data</label>
+            <input type="date" class="campo" id="par-data">
+          </div>
+          <div class="campo-gruppo">
+            <label>Avversario</label>
+            <input type="text" class="campo" id="par-avversario" placeholder="Nome squadra avversaria">
+          </div>
+          <div class="campo-gruppo">
+            <label>Casa / Trasferta</label>
+            <select class="campo" id="par-luogo">
+              <option value="casa">Casa</option>
+              <option value="trasferta">Trasferta</option>
+            </select>
+          </div>
+        </div>
+        <div class="griglia-2" style="margin-top:10px;">
+          <div class="campo-gruppo">
+            <label>Competizione</label>
+            <input type="text" class="campo" id="par-competizione" placeholder="es. Serie D, Coppa...">
+          </div>
+          <div class="campo-gruppo">
+            <label>Risultato (set Dinamo - set avversario)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="number" class="campo" id="par-set-d" min="0" max="3" placeholder="0" style="width:70px; text-align:center;">
+              <span style="font-weight:700; color:var(--blu);">—</span>
+              <input type="number" class="campo" id="par-set-a" min="0" max="3" placeholder="0" style="width:70px; text-align:center;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Punteggi set -->
+        <div style="margin-top:12px;">
+          <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Punteggi set (Dinamo — Avversario)</label>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;" id="punteggi-set-container">
+            <div class="set-score-row" data-set="1">
+              <span style="font-size:12px; font-weight:700; color:var(--blu); margin-right:6px;">Set 1</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-dinamo="1">
+              <span style="margin:0 4px; color:var(--grigio-t);">-</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-avv="1">
+            </div>
+            <div class="set-score-row" data-set="2">
+              <span style="font-size:12px; font-weight:700; color:var(--blu); margin-right:6px;">Set 2</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-dinamo="2">
+              <span style="margin:0 4px; color:var(--grigio-t);">-</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-avv="2">
+            </div>
+            <div class="set-score-row" data-set="3">
+              <span style="font-size:12px; font-weight:700; color:var(--blu); margin-right:6px;">Set 3</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-dinamo="3">
+              <span style="margin:0 4px; color:var(--grigio-t);">-</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-avv="3">
+            </div>
+            <div class="set-score-row" data-set="4">
+              <span style="font-size:12px; font-weight:700; color:var(--blu); margin-right:6px;">Set 4</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-dinamo="4">
+              <span style="margin:0 4px; color:var(--grigio-t);">-</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-avv="4">
+            </div>
+            <div class="set-score-row" data-set="5">
+              <span style="font-size:12px; font-weight:700; color:var(--blu); margin-right:6px;">Set 5</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-dinamo="5">
+              <span style="margin:0 4px; color:var(--grigio-t);">-</span>
+              <input type="number" class="campo" placeholder="—" style="width:60px; text-align:center;" data-avv="5">
+            </div>
+          </div>
+        </div>
+
+        <!-- Presenze partita -->
+        <div style="margin-top:14px;">
+          <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Giocatori in campo</label>
+          <div id="presenze-partita-lista" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <button class="btn btn-primario" onclick="salvaPartita()">💾 Salva partita</button>
+        </div>
+      </div>
+
+      <!-- Classifica stagione -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">🏆</span> Risultati stagione</div>
+        <div class="tabella-wrap">
+          <table id="tabella-partite">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Avversario</th>
+                <th>Luogo</th>
+                <th>Competizione</th>
+                <th>Risultato</th>
+                <th>Set</th>
+                <th>Esito</th>
+                <th id="col-azioni-stat"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-partite"></tbody>
+          </table>
+          <div class="stato-vuoto" id="vuoto-partite" style="display:none;">
+            <div class="icona-grande">🏐</div>
+            <p>Nessuna partita registrata</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rosa ufficiale -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">👕</span> Rosa ufficiale</div>
+        <div class="tabella-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Giocatore</th>
+                <th>Ruolo</th>
+                <th>Partite</th>
+                <th>% presenze</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-rosa"></tbody>
+          </table>
+          <div class="stato-vuoto" id="vuoto-rosa" style="display:none;">
+            <div class="icona-grande">👕</div>
+            <p>Nessun atleta registrato</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
     <!-- ===== ADMIN ===== -->
     <section id="sezione-admin" style="display:none;">
 
@@ -1130,6 +1297,7 @@ let sessioniInMemoria  = [];
 let categorieContabilita = [];
 let squadreAttive = [];
 let atletaInModifica = null;
+let partitiInMemoria = [];
 let movimentoInModifica = null;
 let unsub = {};
 
@@ -1219,6 +1387,8 @@ function avviaApp() {
       if (el) el.style.display = 'none';
     });
     document.getElementById('col-azioni-cont').style.display = 'none';
+    document.getElementById('col-azioni-stat').style.display = 'none';
+    document.getElementById('form-partita-card').style.display = 'none';
   }
 
   mostraSchermata('app');
@@ -1259,6 +1429,8 @@ function avviaListenersFirestore() {
     sessioniInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderSessioni();
   });
+
+  avviaListenerPartite();
 
   // Utenti (solo admin)
   if (ruoloCorrente === 'admin') {
@@ -1316,12 +1488,13 @@ function mostraBadge() {
 // NAVIGAZIONE
 // ============================================================
 function mostraSezione(nome, tab) {
-  ['contabilita','atleti','presenze','admin'].forEach(s => {
+  ['contabilita','atleti','presenze','statistiche','admin'].forEach(s => {
     document.getElementById('sezione-' + s).style.display = s === nome ? '' : 'none';
   });
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('attivo'));
   if (tab) tab.classList.add('attivo');
   if (nome === 'presenze') aggiornaSelectSquadreSessione();
+  if (nome === 'statistiche') renderPresenzaPartita();
 }
 
 // ============================================================
@@ -1773,6 +1946,179 @@ function formatData(str) {
   const [y,m,d] = str.split('-');
   return `${d}/${m}/${y}`;
 }
+
+// ============================================================
+// STATISTICHE — PARTITE
+// ============================================================
+function avviaListenerPartite() {
+  unsub.partite = db.collection('partite_dinamo')
+    .orderBy('data','desc')
+    .onSnapshot(snap => {
+      partitiInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStatistiche();
+    });
+}
+
+function renderPresenzaPartita() {
+  const div = document.getElementById('presenze-partita-lista');
+  if (!div) return;
+  div.innerHTML = atletiInMemoria.map(a => `
+    <label style="display:flex; align-items:center; gap:6px; background:var(--grigio-s); padding:6px 10px; border-radius:8px; cursor:pointer; font-size:13px;">
+      <input type="checkbox" value="${a.id}" data-nome="${a.nome} ${a.cognome}" style="accent-color:var(--arancio);">
+      <span>${a.nome} ${a.cognome}</span>
+    </label>
+  `).join('');
+}
+
+async function salvaPartita() {
+  const data     = document.getElementById('par-data').value;
+  const avv      = document.getElementById('par-avversario').value.trim();
+  const luogo    = document.getElementById('par-luogo').value;
+  const comp     = document.getElementById('par-competizione').value.trim();
+  const setD     = parseInt(document.getElementById('par-set-d').value) || 0;
+  const setA     = parseInt(document.getElementById('par-set-a').value) || 0;
+  if (!data || !avv) { alert('Inserisci data e avversario.'); return; }
+
+  // Punteggi set
+  const set_punteggi = [];
+  for (let i = 1; i <= 5; i++) {
+    const d = document.querySelector(`[data-dinamo="${i}"]`)?.value;
+    const a = document.querySelector(`[data-avv="${i}"]`)?.value;
+    if (d !== '' && a !== '' && d !== null && a !== null) {
+      set_punteggi.push({ set: i, dinamo: parseInt(d)||0, avversario: parseInt(a)||0 });
+    }
+  }
+
+  // Giocatori in campo
+  const giocatori = [];
+  document.querySelectorAll('#presenze-partita-lista input[type=checkbox]:checked').forEach(cb => {
+    giocatori.push({ id: cb.value, nome: cb.dataset.nome });
+  });
+
+  const esito = setD > setA ? 'vittoria' : setD < setA ? 'sconfitta' : 'pareggio';
+
+  await db.collection('partite_dinamo').add({
+    data, avversario: avv, luogo, competizione: comp,
+    set_dinamo: setD, set_avversario: setA, set_punteggi,
+    giocatori, esito, stagione: STAGIONE,
+    creato: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // Reset form
+  ['par-data','par-avversario','par-competizione'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('par-set-d').value = '';
+  document.getElementById('par-set-a').value = '';
+  for (let i = 1; i <= 5; i++) {
+    const d = document.querySelector(`[data-dinamo="${i}"]`);
+    const a = document.querySelector(`[data-avv="${i}"]`);
+    if (d) d.value = '';
+    if (a) a.value = '';
+  }
+  document.querySelectorAll('#presenze-partita-lista input[type=checkbox]').forEach(cb => cb.checked = false);
+  mostraBadge();
+}
+
+function renderStatistiche() {
+  const partite = partitiInMemoria;
+  const pg = partite.length;
+  const vinte  = partite.filter(p => p.esito === 'vittoria').length;
+  const perse  = partite.filter(p => p.esito === 'sconfitta').length;
+  const sv = partite.reduce((s,p) => s + (p.set_dinamo||0), 0);
+  const sp = partite.reduce((s,p) => s + (p.set_avversario||0), 0);
+  const perc = pg ? Math.round(vinte/pg*100) : 0;
+
+  document.getElementById('stat-pg').textContent    = pg;
+  document.getElementById('stat-vinte').textContent = vinte;
+  document.getElementById('stat-perse').textContent = perse;
+  document.getElementById('stat-sv').textContent    = sv;
+  document.getElementById('stat-sp').textContent    = sp;
+  document.getElementById('stat-perc').textContent  = perc + '%';
+
+  renderTabellaPartite(partite);
+  renderRosa(partite);
+}
+
+function renderTabellaPartite(partite) {
+  const tbody = document.getElementById('tbody-partite');
+  const pEdit = ['admin','editor'].includes(ruoloCorrente);
+  if (!partite.length) {
+    tbody.innerHTML = '';
+    document.getElementById('vuoto-partite').style.display = '';
+    return;
+  }
+  document.getElementById('vuoto-partite').style.display = 'none';
+  tbody.innerHTML = partite.map(p => {
+    const punteggi = (p.set_punteggi||[]).map(s => `${s.dinamo}-${s.avversario}`).join(', ');
+    const esitoChip = p.esito === 'vittoria'
+      ? '<span class="chip chip-verde">V</span>'
+      : p.esito === 'sconfitta'
+      ? '<span class="chip chip-rosso">S</span>'
+      : '<span class="chip chip-grigio">P</span>';
+    return `<tr>
+      <td>${formatData(p.data)}</td>
+      <td><strong>${p.avversario}</strong></td>
+      <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
+      <td>${p.competizione||'—'}</td>
+      <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
+      <td style="font-size:12px; color:var(--testo-m);">${punteggi||'—'}</td>
+      <td>${esitoChip}</td>
+      <td>${pEdit ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRosa(partite) {
+  const tbody = document.getElementById('tbody-rosa');
+  // Conta presenze per atleta
+  const conteggio = {};
+  partite.forEach(p => {
+    (p.giocatori||[]).forEach(g => {
+      if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome, partite: 0 };
+      conteggio[g.id].partite++;
+    });
+  });
+
+  // Merge con atleti registrati
+  const pg = partite.length;
+  const tutti = atletiInMemoria.map(a => ({
+    id: a.id,
+    nome: a.nome + ' ' + a.cognome,
+    ruolo: a.ruolo || '—',
+    partite: conteggio[a.id]?.partite || 0,
+    perc: pg ? Math.round((conteggio[a.id]?.partite||0)/pg*100) : 0
+  })).sort((a,b) => b.partite - a.partite);
+
+  if (!tutti.length) {
+    document.getElementById('vuoto-rosa').style.display = '';
+    tbody.innerHTML = '';
+    return;
+  }
+  document.getElementById('vuoto-rosa').style.display = 'none';
+  tbody.innerHTML = tutti.map((a,i) => `
+    <tr>
+      <td style="font-weight:700; color:var(--blu);">${i+1}</td>
+      <td><strong>${a.nome}</strong></td>
+      <td>${a.ruolo}</td>
+      <td>${a.partite}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="flex:1; height:6px; background:var(--grigio-m); border-radius:3px;">
+            <div style="width:${a.perc}%; height:100%; background:var(--arancio); border-radius:3px;"></div>
+          </div>
+          <span style="font-size:12px; font-weight:700; min-width:32px;">${a.perc}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function eliminaPartita(id) {
+  if (!confirm('Eliminare questa partita?')) return;
+  await db.collection('partite_dinamo').delete ? 
+    db.collection('partite_dinamo').doc(id).delete() :
+    db.collection('partite_dinamo').doc(id).delete();
+}
+
 </script>
 </body>
 </html>
