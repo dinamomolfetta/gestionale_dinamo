@@ -1020,7 +1020,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
       <!-- Form nuova partita -->
       <div class="card" id="form-partita-card">
-        <div class="card-titolo"><span class="icona">➕</span> Registra partita</div>
+        <div class="card-titolo" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <span style="display:flex; align-items:center; gap:8px;"><span class="icona">➕</span> Registra partita</span>
+          <label style="cursor:pointer;">
+            <input type="file" id="input-referto-pdf" accept=".pdf" style="display:none;" onchange="importaReferto(this)">
+            <span class="btn btn-secondario btn-piccolo" onclick="document.getElementById('input-referto-pdf').click()">📄 Importa da referto PDF</span>
+          </label>
+        </div>
+        <div id="import-status" style="display:none; background:var(--blu-l); color:var(--blu); padding:10px 14px; border-radius:var(--raggio); font-size:13px; margin-bottom:12px;">
+          ⏳ Analisi referto in corso...
+        </div>
         <div class="griglia-3">
           <div class="campo-gruppo">
             <label>Data</label>
@@ -2117,6 +2126,101 @@ async function eliminaPartita(id) {
   await db.collection('partite_dinamo').delete ? 
     db.collection('partite_dinamo').doc(id).delete() :
     db.collection('partite_dinamo').doc(id).delete();
+}
+
+
+// ============================================================
+// IMPORTA REFERTO PDF → Claude API
+// ============================================================
+async function importaReferto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('import-status');
+  status.style.display = '';
+  status.textContent = '⏳ Lettura referto in corso...';
+
+  try {
+    // Leggi PDF come base64
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    status.textContent = '🤖 Claude sta analizzando il referto...';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Analizza questo referto di pallavolo ed estrai i dati. Rispondi SOLO con un oggetto JSON valido, nessun testo prima o dopo, nessun markdown.
+Il JSON deve avere questa struttura esatta:
+{
+  "data": "YYYY-MM-DD",
+  "avversario": "nome squadra avversaria di DINAMO MOLFETTA",
+  "luogo": "casa o trasferta (trasferta se Dinamo gioca fuori)",
+  "competizione": "campionato/coppa/torneo",
+  "set_dinamo": numero_set_vinti_dinamo,
+  "set_avversario": numero_set_vinti_avversario,
+  "set_punteggi": [
+    {"set": 1, "dinamo": punti, "avversario": punti},
+    {"set": 2, "dinamo": punti, "avversario": punti},
+    {"set": 3, "dinamo": punti, "avversario": punti}
+  ],
+  "giocatori_dinamo": ["Nome Cognome", "Nome Cognome"]
+}`
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    let testo = data.content?.map(c => c.text || '').join('') || '';
+    testo = testo.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(testo);
+
+    // Precompila il form
+    if (parsed.data) document.getElementById('par-data').value = parsed.data;
+    if (parsed.avversario) document.getElementById('par-avversario').value = parsed.avversario;
+    if (parsed.luogo) document.getElementById('par-luogo').value = parsed.luogo;
+    if (parsed.competizione) document.getElementById('par-competizione').value = parsed.competizione;
+    if (parsed.set_dinamo !== undefined) document.getElementById('par-set-d').value = parsed.set_dinamo;
+    if (parsed.set_avversario !== undefined) document.getElementById('par-set-a').value = parsed.set_avversario;
+
+    // Punteggi set
+    if (parsed.set_punteggi) {
+      parsed.set_punteggi.forEach(s => {
+        const d = document.querySelector(`[data-dinamo="${s.set}"]`);
+        const a = document.querySelector(`[data-avv="${s.set}"]`);
+        if (d) d.value = s.dinamo;
+        if (a) a.value = s.avversario;
+      });
+    }
+
+    status.style.background = 'var(--verde-l)';
+    status.style.color = 'var(--verde)';
+    status.textContent = '✅ Dati estratti! Controlla il form e clicca Salva.';
+    input.value = '';
+
+  } catch(e) {
+    status.style.background = 'var(--rosso-l)';
+    status.style.color = 'var(--rosso)';
+    status.textContent = '❌ Errore durante l'analisi. Riprova o inserisci manualmente.';
+    console.error(e);
+  }
 }
 
 </script>
