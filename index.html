@@ -668,6 +668,33 @@ tbody tr:last-child td { border-bottom: none; }
 .chip-blu    { background: var(--blu-l);    color: var(--blu); }
 .chip-grigio { background: var(--grigio-m); color: var(--testo-m); }
 
+
+/* STAGIONI ATLETA */
+.stagione-atleta-riga {
+  display: grid;
+  grid-template-columns: 1.2fr 0.5fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--grigio-m);
+}
+.stagione-atleta-riga:last-child { border-bottom: none; }
+.stagione-atleta-header {
+  display: grid;
+  grid-template-columns: 1.2fr 0.5fr 1fr 1fr auto;
+  gap: 8px;
+  padding: 0 0 6px;
+  border-bottom: 2px solid var(--grigio-m);
+  margin-bottom: 4px;
+}
+.stagione-atleta-header span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--grigio-t);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
 /* ============================================================
    SEZIONE CONTABILITÀ
    ============================================================ */
@@ -1254,7 +1281,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;">
           <div class="campo-gruppo">
             <label>Stagione</label>
-            <select class="campo" id="par-stagione">
+            <select class="campo" id="par-stagione" onchange="renderPresenzaPartita()">
               <option value="2017/2018">2017/2018</option>
               <option value="2018/2019">2018/2019</option>
               <option value="2019/2020">2019/2020</option>
@@ -1337,8 +1364,13 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
         <!-- Presenze partita -->
         <div style="margin-top:14px;">
-          <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Giocatori in campo</label>
-          <div id="presenze-partita-lista" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+            <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Giocatori in campo</label>
+            <select class="campo" id="par-squadra-gare" style="max-width:200px;font-size:13px;" onchange="renderPresenzaPartita()">
+              <option value="">Tutte le squadre</option>
+            </select>
+          </div>
+          <div id="presenze-partita-lista" style="margin-top:4px; display:flex; flex-wrap:wrap; gap:8px;"></div>
         </div>
 
         <div style="margin-top:14px;">
@@ -1507,6 +1539,12 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
             <tr><td style="color:var(--testo-m);padding:5px 0;">Cert. medico</td><td id="va-cert" style="font-weight:500;"></td></tr>
           </table>
         </div>
+      </div>
+
+      <!-- Stagioni -->
+      <div style="margin-top:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Storico stagioni</div>
+        <div id="va-stagioni"></div>
       </div>
 
       <!-- Note -->
@@ -1749,6 +1787,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <label>Note</label>
       <input type="text" class="campo" id="atl-note" placeholder="Note libere">
     </div>
+
+    <!-- STAGIONI ATLETA -->
+    <div style="margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label style="font-size:12px;font-weight:600;color:var(--testo-m);text-transform:uppercase;letter-spacing:0.4px;">Stagioni</label>
+        <button class="btn btn-secondario btn-piccolo" type="button" onclick="aggiungiRigaStagione()">➕ Aggiungi stagione</button>
+      </div>
+      <div id="stagioni-atleta-lista"></div>
+    </div>
+
     <div class="modal-azioni">
       <button class="btn btn-secondario" onclick="chiudiModalAtleta()">Annulla</button>
       <button class="btn btn-primario" onclick="salvaAtleta()">💾 Salva</button>
@@ -2141,10 +2189,15 @@ function esportaCSV() {
 // ============================================================
 function aggiornaSelectSquadre() {
   const sq = [...new Set(atletiInMemoria.map(a => a.squadra).filter(Boolean)), ...squadreAttive.filter(s => !atletiInMemoria.find(a => a.squadra === s))];
-  const selects = ['filtro-squadra-atleti','atl-squadra','sess-squadra'].map(id => document.getElementById(id)).filter(Boolean);
+  const selects = ['filtro-squadra-atleti','atl-squadra','sess-squadra','par-squadra-gare'].map(id => document.getElementById(id)).filter(Boolean);
   selects.forEach(sel => {
     const corrente = sel.value;
-    const extra = sel.id === 'filtro-squadra-atleti' ? '<option value="tutti">Tutte le squadre</option>' : '<option value="">— nessuna —</option>';
+    let extra;
+    if (sel.id === 'filtro-squadra-atleti' || sel.id === 'par-squadra-gare') {
+      extra = '<option value="">Tutte le squadre</option>';
+    } else {
+      extra = '<option value="">— nessuna —</option>';
+    }
     sel.innerHTML = extra + [...new Set([...sq, ...squadreAttive])].map(s => `<option>${s}</option>`).join('');
     if (corrente) sel.value = corrente;
   });
@@ -2278,6 +2331,7 @@ async function salvaAtleta() {
     citta:         document.getElementById('atl-citta').value.trim(),
     pr:            document.getElementById('atl-pr').value.trim().toUpperCase(),
     note:          document.getElementById('atl-note').value.trim(),
+    stagioni:      stagioniAtletaTemp,
     aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
     stagione:   STAGIONE
   };
@@ -2493,12 +2547,37 @@ function avviaListenerPartite() {
 function renderPresenzaPartita() {
   const div = document.getElementById('presenze-partita-lista');
   if (!div) return;
-  div.innerHTML = atletiInMemoria.map(a => `
-    <label style="display:flex; align-items:center; gap:6px; background:var(--grigio-s); padding:6px 10px; border-radius:8px; cursor:pointer; font-size:13px;">
-      <input type="checkbox" value="${a.id}" data-nome="${a.nome} ${a.cognome}" style="accent-color:var(--arancio);">
-      <span>${a.nome} ${a.cognome}</span>
-    </label>
-  `).join('');
+  const stagPar = document.getElementById('par-stagione')?.value || stagioneSel;
+  const sqPar   = document.getElementById('par-squadra-gare')?.value || '';
+
+  // Filtra atleti che hanno una stagione corrispondente (e squadra se selezionata)
+  const atletiFiltrati = atletiInMemoria.filter(a => {
+    const stagioni = a.stagioni || [];
+    if (!stagioni.length) return true; // se non ha stagioni mostralo comunque
+    return stagioni.some(s => {
+      const stMatch = !stagPar || s.stagione === stagPar;
+      const sqMatch = !sqPar || s.squadra === sqPar;
+      return stMatch && sqMatch;
+    });
+  }).sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+
+  if (!atletiFiltrati.length) {
+    div.innerHTML = '<p style="font-size:13px;color:var(--grigio-t);padding:8px 0;">Nessun atleta trovato per questa stagione/squadra.</p>';
+    return;
+  }
+
+  div.innerHTML = atletiFiltrati.map(a => {
+    const stagInfo = (a.stagioni||[]).find(s => s.stagione === stagPar) || {};
+    const maglia = stagInfo.maglia ? `<span style="font-size:11px;font-weight:700;color:var(--arancio);min-width:24px;">#${stagInfo.maglia}</span>` : '<span style="min-width:24px;"></span>';
+    return `
+      <label style="display:flex;align-items:center;gap:6px;background:var(--grigio-s);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px;">
+        <input type="checkbox" value="${a.id}" data-nome="${a.cognome} ${a.nome}" style="accent-color:var(--arancio);">
+        ${maglia}
+        <span>${a.cognome} ${a.nome}</span>
+        ${stagInfo.ruolo ? `<span style="font-size:11px;color:var(--grigio-t);">${stagInfo.ruolo}</span>` : ''}
+      </label>
+    `;
+  }).join('');
 }
 
 async function salvaPartita() {
@@ -2968,7 +3047,7 @@ function visualizzaAtleta(id) {
   } else {
     noteBox.style.display = 'none';
   }
-
+  renderStagioniInScheda(a.stagioni || []);
   document.getElementById('modal-visualizza-atleta').classList.add('aperto');
 }
 
@@ -3037,6 +3116,85 @@ function apriStagione(stagione) {
 function apriSezioneAtleti() {
   mostraSchermata('app');
   mostraSezione('atleti', document.querySelectorAll('.nav-tab')[1]);
+}
+
+
+// ============================================================
+// STAGIONI ATLETA
+// ============================================================
+const STAGIONI_LIST = ['2017/2018','2018/2019','2019/2020','2020/2021','2021/2022','2022/2023','2023/2024','2024/2025','2025/2026','2026/2027'];
+const RUOLI_LIST = ['','Palleggiatore','Schiacciatore','Opposto','Centrale','Libero','Ricevitore'];
+
+function renderStagioniAtleta(stagioni) {
+  const div = document.getElementById('stagioni-atleta-lista');
+  if (!div) return;
+
+  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  const opzioniSquadre = sq.map(s => `<option value="${s}">${s}</option>`).join('');
+  const opzioniStagioni = STAGIONI_LIST.map(s => `<option value="${s}">${s}</option>`).join('');
+  const opzioniRuoli = RUOLI_LIST.map(r => `<option value="${r}">${r || '— ruolo —'}</option>`).join('');
+
+  div.innerHTML = `
+    <div class="stagione-atleta-header">
+      <span>Stagione</span>
+      <span>N° maglia</span>
+      <span>Ruolo</span>
+      <span>Squadra</span>
+      <span></span>
+    </div>
+    ${(stagioni||[]).map((s,i) => `
+      <div class="stagione-atleta-riga" data-idx="${i}">
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneAtleta(${i},'stagione',this.value)">
+          ${STAGIONI_LIST.map(st => `<option value="${st}" ${s.stagione===st?'selected':''}>${st}</option>`).join('')}
+        </select>
+        <input type="number" class="campo" style="font-size:13px;padding:6px 8px;text-align:center;" min="1" max="99" placeholder="#" value="${s.maglia||''}" onchange="aggiornaStagioneAtleta(${i},'maglia',this.value)">
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneAtleta(${i},'ruolo',this.value)">
+          ${RUOLI_LIST.map(r => `<option value="${r}" ${s.ruolo===r?'selected':''}>${r||'— ruolo —'}</option>`).join('')}
+        </select>
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneAtleta(${i},'squadra',this.value)">
+          <option value="">— squadra —</option>
+          ${sq.map(sq2 => `<option value="${sq2}" ${s.squadra===sq2?'selected':''}>${sq2}</option>`).join('')}
+        </select>
+        <button class="btn btn-pericolo btn-piccolo" onclick="rimuoviStagioneAtleta(${i})">✕</button>
+      </div>
+    `).join('')}
+    ${(stagioni||[]).length === 0 ? '<p style="font-size:13px;color:var(--grigio-t);padding:8px 0;">Nessuna stagione aggiunta.</p>' : ''}
+  `;
+}
+
+let stagioniAtletaTemp = [];
+
+function aggiungiRigaStagione() {
+  stagioniAtletaTemp.push({ stagione: stagioneSel || '2025/2026', maglia: '', ruolo: '', squadra: '' });
+  renderStagioniAtleta(stagioniAtletaTemp);
+}
+
+function aggiornaStagioneAtleta(idx, campo, valore) {
+  if (stagioniAtletaTemp[idx]) {
+    stagioniAtletaTemp[idx][campo] = campo === 'maglia' ? (parseInt(valore)||'') : valore;
+  }
+}
+
+function rimuoviStagioneAtleta(idx) {
+  stagioniAtletaTemp.splice(idx, 1);
+  renderStagioniAtleta(stagioniAtletaTemp);
+}
+
+function renderStagioniInScheda(stagioni) {
+  const div = document.getElementById('va-stagioni');
+  if (!div) return;
+  if (!stagioni || !stagioni.length) {
+    div.innerHTML = '<p style="font-size:13px;color:var(--grigio-t);">Nessuna stagione registrata.</p>';
+    return;
+  }
+  div.innerHTML = stagioni.map(s => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--grigio-m);">
+      <span class="chip chip-blu" style="min-width:80px;text-align:center;">${s.stagione}</span>
+      ${s.maglia ? `<span class="chip" style="background:var(--arancio-l);color:var(--arancio-d);">#${s.maglia}</span>` : ''}
+      <span style="font-size:13px;font-weight:500;">${s.ruolo||'—'}</span>
+      <span style="font-size:13px;color:var(--testo-m);">${s.squadra||'—'}</span>
+    </div>
+  `).join('');
 }
 
 </script>
