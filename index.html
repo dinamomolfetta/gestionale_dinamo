@@ -1209,6 +1209,94 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 </div>
 
 
+
+<!-- MODAL VISUALIZZA ATLETA -->
+<div class="modal-overlay" id="modal-visualizza-atleta">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-titolo">
+      <span>Scheda atleta</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondario btn-piccolo" onclick="stampaAtleta()">🖨️ Stampa</button>
+        <button class="modal-chiudi" onclick="chiudiVisualizzaAtleta()">×</button>
+      </div>
+    </div>
+    <div id="scheda-atleta-print">
+      <!-- Header scheda -->
+      <div style="display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:2px solid var(--arancio);margin-bottom:20px;">
+        <div id="va-avatar" style="width:64px;height:64px;border-radius:50%;background:var(--blu-l);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--blu);flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div id="va-nome-completo" style="font-size:22px;font-weight:700;color:var(--blu);"></div>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+            <span id="va-squadra-chip" class="chip chip-blu"></span>
+            <span id="va-ruolo-chip" class="chip chip-grigio"></span>
+            <span id="va-maglia-chip" class="chip" style="background:var(--arancio-l);color:var(--arancio-d);"></span>
+            <span id="va-stato-chip" class="chip"></span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--grigio-t);text-transform:uppercase;letter-spacing:0.4px;">ASD Pol. Dinamo Molfetta</div>
+          <div style="font-size:11px;color:var(--grigio-t);">Stagione 2026/2027</div>
+        </div>
+      </div>
+
+      <!-- Sezioni dati -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- Col sinistra -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Dati anagrafici</div>
+          <table style="width:100%;font-size:14px;">
+            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Data di nascita</td><td id="va-nascita" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Luogo di nascita</td><td id="va-luogo-nascita" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Codice fiscale</td><td id="va-cf" style="font-weight:500;font-family:monospace;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Altezza</td><td id="va-altezza" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Peso</td><td id="va-peso" style="font-weight:500;"></td></tr>
+          </table>
+
+          <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Contatti</div>
+          <table style="width:100%;font-size:14px;">
+            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Telefono</td><td id="va-telefono" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Email</td><td id="va-email" style="font-weight:500;"></td></tr>
+          </table>
+        </div>
+
+        <!-- Col destra -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Residenza</div>
+          <table style="width:100%;font-size:14px;">
+            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Via</td><td id="va-via" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">CAP</td><td id="va-cap" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Città</td><td id="va-citta" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Provincia</td><td id="va-pr" style="font-weight:500;"></td></tr>
+          </table>
+
+          <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Tesseramento</div>
+          <table style="width:100%;font-size:14px;">
+            <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Stato</td><td id="va-stato" style="font-weight:500;"></td></tr>
+            <tr><td style="color:var(--testo-m);padding:5px 0;">Cert. medico</td><td id="va-cert" style="font-weight:500;"></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div id="va-note-box" style="margin-top:16px;padding:12px;background:var(--grigio-s);border-radius:var(--raggio);font-size:14px;display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--grigio-t);text-transform:uppercase;margin-bottom:4px;">Note</div>
+        <div id="va-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  body > *:not(#modal-visualizza-atleta) { display: none !important; }
+  .modal-overlay { position:static !important; background:none !important; padding:0 !important; }
+  .modal { box-shadow:none !important; max-width:100% !important; padding:0 !important; }
+  .modal-titolo { display:none !important; }
+  #scheda-atleta-print { display:block !important; }
+}
+</style>
+
 <!-- MODAL MODIFICA PARTITA -->
 <div class="modal-overlay" id="modal-partita">
   <div class="modal">
@@ -1313,6 +1401,21 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cognome" placeholder="Cognome">
       </div>
     </div>
+    <!-- Riga: Data nascita + Luogo nascita + Codice fiscale -->
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Data di nascita</label>
+        <input type="date" class="campo" id="atl-nascita">
+      </div>
+      <div class="campo-gruppo">
+        <label>Luogo di nascita</label>
+        <input type="text" class="campo" id="atl-luogo-nascita" placeholder="Città">
+      </div>
+      <div class="campo-gruppo">
+        <label>Codice fiscale</label>
+        <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
+      </div>
+    </div>
     <!-- Riga: N°maglia (50%) + Ruolo + Squadra -->
     <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr; gap:10px; margin-top:10px;">
       <div class="campo-gruppo">
@@ -1334,21 +1437,6 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <div class="campo-gruppo">
         <label>Squadra</label>
         <select class="campo" id="atl-squadra"></select>
-      </div>
-    </div>
-    <!-- Riga: Data nascita + Luogo nascita + Codice fiscale -->
-    <div class="griglia-3" style="margin-top:10px;">
-      <div class="campo-gruppo">
-        <label>Data di nascita</label>
-        <input type="date" class="campo" id="atl-nascita">
-      </div>
-      <div class="campo-gruppo">
-        <label>Luogo di nascita</label>
-        <input type="text" class="campo" id="atl-luogo-nascita" placeholder="Città">
-      </div>
-      <div class="campo-gruppo">
-        <label>Codice fiscale</label>
-        <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
       </div>
     </div>
     <!-- Riga: Altezza + Peso + Stato tesseramento -->
@@ -1862,6 +1950,7 @@ function renderAtleti(lista) {
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
       </div>
       <div class="atleta-azioni">
+        <button class="btn btn-secondario btn-piccolo" onclick="visualizzaAtleta('${a.id}')">👁️</button>
         ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : ''}
         ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaAtleta('${a.id}')">🗑️</button>` : ''}
       </div>
@@ -2565,6 +2654,68 @@ async function aggiornaPartita() {
   });
   mostraBadge();
   chiudiModalPartita();
+}
+
+
+// ============================================================
+// VISUALIZZA ATLETA (scheda stampabile)
+// ============================================================
+function visualizzaAtleta(id) {
+  const a = atletiInMemoria.find(x => x.id === id);
+  if (!a) return;
+
+  const fmt = s => { if(!s) return '—'; const [y,m,g] = s.split('-'); return g+'/'+m+'/'+y; };
+  const val = v => v || '—';
+
+  document.getElementById('va-avatar').textContent = ((a.cognome||'?')[0] + (a.nome||'?')[0]).toUpperCase();
+  document.getElementById('va-nome-completo').textContent = (a.cognome + ' ' + a.nome).toUpperCase();
+
+  const sqChip = document.getElementById('va-squadra-chip');
+  sqChip.textContent = a.squadra || '—';
+
+  const ruoloChip = document.getElementById('va-ruolo-chip');
+  ruoloChip.textContent = a.ruolo || '—';
+
+  const magliaChip = document.getElementById('va-maglia-chip');
+  magliaChip.textContent = a.maglia ? '#' + a.maglia : '—';
+
+  const stati = { tesserato:'Tesserato', in_corso:'In corso', non_tesserato:'Non tesserato', sospeso:'Sospeso' };
+  const classiStato = { tesserato:'chip-verde', in_corso:'chip-giallo', non_tesserato:'chip-rosso', sospeso:'chip-grigio' };
+  const statoChip = document.getElementById('va-stato-chip');
+  statoChip.textContent = stati[a.stato_tess] || '—';
+  statoChip.className = 'chip ' + (classiStato[a.stato_tess] || 'chip-grigio');
+
+  document.getElementById('va-nascita').textContent = fmt(a.nascita);
+  document.getElementById('va-luogo-nascita').textContent = val(a.luogo_nascita);
+  document.getElementById('va-cf').textContent = val(a.cf);
+  document.getElementById('va-altezza').textContent = a.altezza ? a.altezza + ' cm' : '—';
+  document.getElementById('va-peso').textContent = a.peso ? a.peso + ' kg' : '—';
+  document.getElementById('va-telefono').textContent = val(a.telefono);
+  document.getElementById('va-email').textContent = val(a.email);
+  document.getElementById('va-via').textContent = val(a.via);
+  document.getElementById('va-cap').textContent = val(a.cap);
+  document.getElementById('va-citta').textContent = val(a.citta);
+  document.getElementById('va-pr').textContent = val(a.pr);
+  document.getElementById('va-stato').textContent = stati[a.stato_tess] || '—';
+  document.getElementById('va-cert').textContent = fmt(a.cert);
+
+  const noteBox = document.getElementById('va-note-box');
+  if (a.note) {
+    document.getElementById('va-note').textContent = a.note;
+    noteBox.style.display = '';
+  } else {
+    noteBox.style.display = 'none';
+  }
+
+  document.getElementById('modal-visualizza-atleta').classList.add('aperto');
+}
+
+function chiudiVisualizzaAtleta() {
+  document.getElementById('modal-visualizza-atleta').classList.remove('aperto');
+}
+
+function stampaAtleta() {
+  window.print();
 }
 
 </script>
