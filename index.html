@@ -1535,7 +1535,22 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <span>Modifica partita</span>
       <button class="modal-chiudi" onclick="chiudiModalPartita()">×</button>
     </div>
-    <div class="griglia-3">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;">
+      <div class="campo-gruppo">
+        <label>Stagione</label>
+        <select class="campo" id="mpar-stagione">
+          <option value="2017/2018">2017/2018</option>
+          <option value="2018/2019">2018/2019</option>
+          <option value="2019/2020">2019/2020</option>
+          <option value="2020/2021">2020/2021</option>
+          <option value="2021/2022">2021/2022</option>
+          <option value="2022/2023">2022/2023</option>
+          <option value="2023/2024">2023/2024</option>
+          <option value="2024/2025">2024/2025</option>
+          <option value="2025/2026">2025/2026</option>
+          <option value="2026/2027">2026/2027</option>
+        </select>
+      </div>
       <div class="campo-gruppo">
         <label>Data</label>
         <input type="date" class="campo" id="mpar-data">
@@ -2840,6 +2855,7 @@ function apriModalPartita(id) {
   const p = partitiInMemoria.find(x => x.id === id);
   if (!p) return;
   partitaInModifica = id;
+  document.getElementById('mpar-stagione').value = p.stagione || '2025/2026';
   document.getElementById('mpar-data').value = p.data || '';
   document.getElementById('mpar-avversario').value = p.avversario || '';
   document.getElementById('mpar-luogo').value = p.luogo || 'trasferta';
@@ -2887,6 +2903,7 @@ async function aggiornaPartita() {
     giocatori.push({ id: cb.value, nome: cb.dataset.nome });
   });
   await db.collection('partite_dinamo').doc(partitaInModifica).update({
+    stagione: document.getElementById('mpar-stagione').value,
     data: document.getElementById('mpar-data').value,
     avversario: document.getElementById('mpar-avversario').value.trim(),
     luogo: document.getElementById('mpar-luogo').value,
