@@ -1022,13 +1022,18 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <div class="card" id="form-partita-card">
         <div class="card-titolo" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
           <span style="display:flex; align-items:center; gap:8px;"><span class="icona">➕</span> Registra partita</span>
-          <label style="cursor:pointer;">
-            <input type="file" id="input-referto-pdf" accept=".pdf" style="display:none;" onchange="importaReferto(this)">
-            <span class="btn btn-secondario btn-piccolo" onclick="document.getElementById('input-referto-pdf').click()">📄 Importa da referto PDF</span>
-          </label>
+          <button class="btn btn-secondario btn-piccolo" onclick="toggleImportaReferto()">📋 Importa da testo referto</button>
         </div>
-        <div id="import-status" style="display:none; background:var(--blu-l); color:var(--blu); padding:10px 14px; border-radius:var(--raggio); font-size:13px; margin-bottom:12px;">
-          ⏳ Analisi referto in corso...
+        <div id="import-box" style="display:none; margin-bottom:16px;">
+          <div class="campo-gruppo">
+            <label>Incolla qui il testo del referto</label>
+            <textarea class="campo" id="testo-referto" rows="6" placeholder="Incolla il testo copiato dal referto PDF..."></textarea>
+          </div>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="btn btn-primario btn-piccolo" onclick="parseReferto()">🔍 Analizza e precompila</button>
+            <button class="btn btn-secondario btn-piccolo" onclick="toggleImportaReferto()">Chiudi</button>
+          </div>
+          <div id="import-status" style="display:none; margin-top:8px; padding:10px 14px; border-radius:var(--raggio); font-size:13px;"></div>
         </div>
         <div class="griglia-3">
           <div class="campo-gruppo">
@@ -2130,9 +2135,112 @@ async function eliminaPartita(id) {
 
 
 // ============================================================
-// IMPORTA REFERTO PDF → Claude API
+// IMPORTA REFERTO DA TESTO
 // ============================================================
-async function importaReferto(input) {
+function toggleImportaReferto() {
+  const box = document.getElementById('import-box');
+  box.style.display = box.style.display === 'none' ? '' : 'none';
+}
+
+function parseReferto() {
+  const testo = document.getElementById('testo-referto').value;
+  const status = document.getElementById('import-status');
+  status.style.display = '';
+
+  if (!testo.trim()) {
+    status.style.background = 'var(--rosso-l)';
+    status.style.color = 'var(--rosso)';
+    status.textContent = 'Incolla prima il testo del referto.';
+    return;
+  }
+
+  try {
+    const righe = testo.split('\n').map(r => r.trim()).filter(Boolean);
+
+    // DATA
+    for (const r of righe) {
+      const m = r.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) {
+        document.getElementById('par-data').value = m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+        break;
+      }
+    }
+
+    // LUOGO — riga con LUOGO o CAMPO
+    for (const r of righe) {
+      if (r.toUpperCase().includes('LUOGO') || r.toUpperCase().includes('CAMPO')) {
+        document.getElementById('par-luogo').value = r.toUpperCase().includes('MOLFETTA') ? 'casa' : 'trasferta';
+        break;
+      }
+    }
+
+    // COMPETIZIONE — cerca "Serie X"
+    for (const r of righe) {
+      const m = r.match(/Serie\s+([A-Z]\d?)/i);
+      if (m) { document.getElementById('par-competizione').value = 'Serie ' + m[1]; break; }
+    }
+
+    // AVVERSARIO — cerca riga con nome squadra avversaria
+    for (const r of righe) {
+      if (r.toUpperCase().includes('NOHA') || r.toUpperCase().includes('VOLLEY')) {
+        const nome = r.replace(/[AB]$/,'').trim();
+        document.getElementById('par-avversario').value = nome;
+        break;
+      }
+    }
+
+    // RISULTATO FINALE — cerca "X:Y" vicino a "VINCE" o "RISULTATO"
+    for (let i = 0; i < righe.length; i++) {
+      if (righe[i].toUpperCase().includes('VINCE') || righe[i].toUpperCase().includes('RISULTATO FINALE')) {
+        for (let j = i; j < Math.min(i+5, righe.length); j++) {
+          const m = righe[j].match(/(\d)\s*:\s*(\d)/);
+          if (m) {
+            const isDinamoA = testo.toUpperCase().includes('DINAMO') && testo.toUpperCase().indexOf('DINAMO') < testo.toUpperCase().indexOf('NOHA');
+            if (isDinamoA) {
+              document.getElementById('par-set-d').value = m[1];
+              document.getElementById('par-set-a').value = m[2];
+            } else {
+              document.getElementById('par-set-d').value = m[2];
+              document.getElementById('par-set-a').value = m[1];
+            }
+            break;
+          }
+        }
+        break;
+      }
+    }
+
+    // PUNTEGGI SET — cerca coppie di numeri tipo "25-18" plausibili per pallavolo
+    const setTrovati = [];
+    for (const r of righe) {
+      const m = r.match(/^(\d{1,2})\s*[-–]\s*(\d{1,2})$/);
+      if (m) {
+        const a = parseInt(m[1]), b = parseInt(m[2]);
+        if ((a >= 15 || b >= 15) && a <= 35 && b <= 35) {
+          setTrovati.push({d: a, av: b});
+          if (setTrovati.length >= 5) break;
+        }
+      }
+    }
+    setTrovati.forEach((s, i) => {
+      const nd = document.querySelector('[data-dinamo="' + (i+1) + '"]');
+      const na = document.querySelector('[data-avv="' + (i+1) + '"]');
+      if (nd) nd.value = s.d;
+      if (na) na.value = s.av;
+    });
+
+    status.style.background = 'var(--verde-l)';
+    status.style.color = 'var(--verde)';
+    status.textContent = 'Dati precompilati! Controlla i campi e correggi se necessario, poi clicca Salva.';
+
+  } catch(e) {
+    status.style.background = 'var(--rosso-l)';
+    status.style.color = 'var(--rosso)';
+    status.textContent = 'Errore durante l\'analisi. Inserisci i dati manualmente.';
+    console.error(e);
+  }
+}
+async function importaReferto_DISABLED(input) {
   const file = input.files[0];
   if (!file) return;
   const status = document.getElementById('import-status');
