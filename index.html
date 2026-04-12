@@ -1548,6 +1548,15 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <div id="va-stagioni"></div>
       </div>
 
+      <!-- Staff -->
+      <div id="va-staff-box" style="display:none;margin-top:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Ruolo staff</div>
+        <table style="width:100%;font-size:14px;">
+          <tr><td style="color:var(--testo-m);padding:5px 0;width:40%;">Ruolo</td><td id="va-ruolo-staff" style="font-weight:500;"></td></tr>
+          <tr><td style="color:var(--testo-m);padding:5px 0;">Codice Fipav</td><td id="va-fipav-staff" style="font-weight:500;font-family:monospace;"></td></tr>
+        </table>
+      </div>
+
       <!-- Note -->
       <div id="va-note-box" style="margin-top:16px;padding:12px;background:var(--grigio-s);border-radius:var(--raggio);font-size:14px;display:none;">
         <div style="font-size:11px;font-weight:700;color:var(--grigio-t);text-transform:uppercase;margin-bottom:4px;">Note</div>
@@ -1701,8 +1710,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
       </div>
     </div>
-    <!-- Riga: N°maglia (50%) + Ruolo + Squadra -->
-    <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr; gap:10px; margin-top:10px;">
+    <!-- Riga: N°maglia + Ruolo + Squadra + Codice Fipav -->
+    <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr 1fr; gap:10px; margin-top:10px;">
       <div class="campo-gruppo">
         <label>N° maglia</label>
         <input type="number" class="campo" id="atl-maglia" placeholder="10" min="1" max="99">
@@ -1717,16 +1726,18 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <option>Centrale</option>
           <option>Libero</option>
           <option>Ricevitore</option>
-          <option>Allenatore</option>
-          <option>Dirigente Acc.</option>
         </select>
       </div>
       <div class="campo-gruppo">
         <label>Squadra</label>
         <select class="campo" id="atl-squadra"></select>
       </div>
+      <div class="campo-gruppo">
+        <label>Codice Fipav</label>
+        <input type="text" class="campo" id="atl-fipav" placeholder="Codice numerico">
+      </div>
     </div>
-    <!-- Riga: Altezza + Peso + Stato tesseramento -->
+    <!-- Riga: Altezza + Peso + Cert. medico -->
     <div class="griglia-3" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Altezza (cm)</label>
@@ -1737,11 +1748,11 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="number" class="campo" id="atl-peso" placeholder="Es. 80" min="30" max="200">
       </div>
       <div class="campo-gruppo">
-        <label>Stato tesseramento</label>
-
+        <label>Scad. certificato medico</label>
+        <input type="date" class="campo" id="atl-cert">
       </div>
     </div>
-    <!-- Residenza su campi separati -->
+    <!-- Residenza -->
     <div style="margin-top:10px;">
       <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:6px;">Residenza</label>
       <div class="campo-gruppo" style="margin-bottom:8px;">
@@ -1763,7 +1774,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </div>
       </div>
     </div>
-    <!-- Riga: Telefono + Email -->
+    <!-- Telefono + Email -->
     <div class="griglia-2" style="margin-top:10px;">
       <div class="campo-gruppo">
         <label>Telefono</label>
@@ -1774,16 +1785,23 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="email" class="campo" id="atl-email" placeholder="atleta@email.com">
       </div>
     </div>
-    <!-- Riga: Cert. medico (solo per giocatori) -->
-    <div class="griglia-2" id="campi-cert" style="margin-top:10px;">
-      <div class="campo-gruppo">
-        <label>Scad. certificato medico</label>
-        <input type="date" class="campo" id="atl-cert">
-      </div>
-      <!-- Numero maglia solo per giocatori -->
-      <div class="campo-gruppo">
-        <label>N° maglia</label>
-        <input type="number" class="campo" id="atl-maglia" placeholder="10" min="1" max="99">
+
+    <!-- SEZIONE STAFF (Allenatore / Dirigente Acc.) -->
+    <div style="margin-top:16px; padding:14px; background:var(--blu-l); border-radius:var(--raggio); border-left:4px solid var(--blu);">
+      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;">Staff tecnico / dirigenziale</div>
+      <div class="griglia-2">
+        <div class="campo-gruppo">
+          <label>Ruolo staff</label>
+          <select class="campo" id="atl-ruolo-staff">
+            <option value="">— nessuno —</option>
+            <option value="Allenatore">Allenatore</option>
+            <option value="Dirigente Acc.">Dirigente Acc.</option>
+          </select>
+        </div>
+        <div class="campo-gruppo">
+          <label>Codice Fipav staff</label>
+          <input type="text" class="campo" id="atl-fipav-staff" placeholder="Codice numerico">
+        </div>
       </div>
     </div>
     <div class="campo-gruppo" style="margin-top:10px;">
@@ -2292,8 +2310,11 @@ function apriModalAtleta(id) {
     document.getElementById('atl-nascita').value = a.nascita || '';
     document.getElementById('atl-squadra').value = a.squadra || '';
     document.getElementById('atl-ruolo').value = a.ruolo || '';
-    aggiornaVisibilitaCampiAtleta();
     document.getElementById('atl-fipav').value = a.fipav || '';
+    const ruoloStaffEl = document.getElementById('atl-ruolo-staff');
+    const fipavStaffEl = document.getElementById('atl-fipav-staff');
+    if (ruoloStaffEl) ruoloStaffEl.value = a.ruolo_staff || '';
+    if (fipavStaffEl) fipavStaffEl.value = a.fipav_staff || '';
     document.getElementById('atl-cert').value = a.cert || '';
     document.getElementById('atl-telefono').value = a.telefono || '';
     document.getElementById('atl-email').value = a.email || '';
@@ -2308,10 +2329,10 @@ function apriModalAtleta(id) {
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-fipav-staff','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const rse = document.getElementById('atl-ruolo-staff'); if(rse) rse.value = '';
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
-    aggiornaVisibilitaCampiAtleta();
   }
   // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
   if (id) {
@@ -2336,24 +2357,26 @@ async function salvaAtleta() {
   const g = id => document.getElementById(id);
   const dati = {
     nome, cognome,
-    nascita:       g('atl-nascita')?.value || '',
-    squadra:       g('atl-squadra')?.value || '',
-    maglia:        g('atl-maglia')?.value ? parseInt(g('atl-maglia').value) : null,
-    ruolo:         g('atl-ruolo')?.value || '',
-    fipav:         g('atl-fipav')?.value?.trim() || '',
-    cert:          g('atl-cert')?.value || '',
-    telefono:      g('atl-telefono')?.value?.trim() || '',
-    email:         g('atl-email')?.value?.trim() || '',
-    cf:            g('atl-cf')?.value?.trim().toUpperCase() || '',
-    luogo_nascita: g('atl-luogo-nascita')?.value?.trim() || '',
-    altezza:       g('atl-altezza')?.value ? parseInt(g('atl-altezza').value) : null,
-    peso:          g('atl-peso')?.value ? parseInt(g('atl-peso').value) : null,
-    via:           g('atl-via')?.value?.trim() || '',
-    cap:           g('atl-cap')?.value?.trim() || '',
-    citta:         g('atl-citta')?.value?.trim() || '',
-    pr:            g('atl-pr')?.value?.trim().toUpperCase() || '',
-    note:          g('atl-note')?.value?.trim() || '',
-    stagioni:      stagioniAtletaTemp,
+    nascita:        g('atl-nascita')?.value || '',
+    squadra:        g('atl-squadra')?.value || '',
+    maglia:         g('atl-maglia')?.value ? parseInt(g('atl-maglia').value) : null,
+    ruolo:          g('atl-ruolo')?.value || '',
+    fipav:          g('atl-fipav')?.value?.trim() || '',
+    ruolo_staff:    g('atl-ruolo-staff')?.value || '',
+    fipav_staff:    g('atl-fipav-staff')?.value?.trim() || '',
+    cert:           g('atl-cert')?.value || '',
+    telefono:       g('atl-telefono')?.value?.trim() || '',
+    email:          g('atl-email')?.value?.trim() || '',
+    cf:             g('atl-cf')?.value?.trim().toUpperCase() || '',
+    luogo_nascita:  g('atl-luogo-nascita')?.value?.trim() || '',
+    altezza:        g('atl-altezza')?.value ? parseInt(g('atl-altezza').value) : null,
+    peso:           g('atl-peso')?.value ? parseInt(g('atl-peso').value) : null,
+    via:            g('atl-via')?.value?.trim() || '',
+    cap:            g('atl-cap')?.value?.trim() || '',
+    citta:          g('atl-citta')?.value?.trim() || '',
+    pr:             g('atl-pr')?.value?.trim().toUpperCase() || '',
+    note:           g('atl-note')?.value?.trim() || '',
+    stagioni:       stagioniAtletaTemp,
     aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
     stagione:   STAGIONE
   };
@@ -3058,6 +3081,18 @@ function visualizzaAtleta(id) {
   document.getElementById('va-citta').textContent = val(a.citta);
   document.getElementById('va-pr').textContent = val(a.pr);
   document.getElementById('va-fipav').textContent = a.fipav || '—';
+  const vaStaff = document.getElementById('va-staff-box');
+  if (vaStaff) {
+    if (a.ruolo_staff) {
+      vaStaff.style.display = '';
+      const vsRuolo = document.getElementById('va-ruolo-staff');
+      const vsFipav = document.getElementById('va-fipav-staff');
+      if (vsRuolo) vsRuolo.textContent = a.ruolo_staff;
+      if (vsFipav) vsFipav.textContent = a.fipav_staff || '—';
+    } else {
+      vaStaff.style.display = 'none';
+    }
+  }
   document.getElementById('va-cert').textContent = fmt(a.cert);
   const isStaff = a.ruolo === 'Allenatore' || a.ruolo === 'Dirigente Acc.';
   const certRow = document.getElementById('va-cert-row');
@@ -3258,15 +3293,6 @@ function renderStagioniInScheda(stagioni) {
   `).join('');
 }
 
-
-function aggiornaVisibilitaCampiAtleta() {
-  const ruolo = document.getElementById('atl-ruolo')?.value || '';
-  const isStaff = ruolo === 'Allenatore' || ruolo === 'Dirigente Acc.';
-  const campiGiocatore = document.getElementById('campi-giocatore');
-  const campiCert = document.getElementById('campi-cert');
-  if (campiGiocatore) campiGiocatore.style.display = isStaff ? 'none' : '';
-  if (campiCert) campiCert.style.display = isStaff ? 'none' : '';
-}
 
 </script>
 </body>
