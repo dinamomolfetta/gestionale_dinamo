@@ -994,7 +994,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
   <!-- Nav tabs -->
   <nav class="nav-tabs" id="nav-tabs">
-    <button class="nav-tab attivo" onclick="mostraSezione('contabilita', this)">💰 Contabilità</button>
+    <button class="nav-tab" onclick="tornaHome()" style="color:var(--arancio);">🏠 Home</button>
+    <button class="nav-tab attivo" onclick="mostraSezione('contabilita', this)" style="display:none" id="tab-contabilita">💰 Contabilità</button>
     <button class="nav-tab" onclick="mostraSezione('atleti', this)">🏐 Atleti</button>
     <button class="nav-tab" onclick="mostraSezione('presenze', this)">📋 Presenze</button>
     <button class="nav-tab" onclick="mostraSezione('statistiche', this)">📈 Statistiche</button>
@@ -1250,7 +1251,22 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           </div>
           <div id="import-status" style="display:none; margin-top:8px; padding:10px 14px; border-radius:var(--raggio); font-size:13px;"></div>
         </div>
-        <div class="griglia-3">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;">
+          <div class="campo-gruppo">
+            <label>Stagione</label>
+            <select class="campo" id="par-stagione">
+              <option value="2017/2018">2017/2018</option>
+              <option value="2018/2019">2018/2019</option>
+              <option value="2019/2020">2019/2020</option>
+              <option value="2020/2021">2020/2021</option>
+              <option value="2021/2022">2021/2022</option>
+              <option value="2022/2023">2022/2023</option>
+              <option value="2023/2024">2023/2024</option>
+              <option value="2024/2025">2024/2025</option>
+              <option value="2025/2026" selected>2025/2026</option>
+              <option value="2026/2027">2026/2027</option>
+            </select>
+          </div>
           <div class="campo-gruppo">
             <label>Data</label>
             <input type="date" class="campo" id="par-data">
@@ -1337,6 +1353,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <table id="tabella-partite">
             <thead>
               <tr>
+                <th>Stagione</th>
                 <th>Data</th>
                 <th>Avversario</th>
                 <th>Luogo</th>
@@ -2497,12 +2514,13 @@ async function salvaPartita() {
   await db.collection('partite_dinamo').add({
     data, avversario: avv, luogo, competizione: comp,
     set_dinamo: setD, set_avversario: setA, set_punteggi,
-    giocatori, esito, stagione: STAGIONE,
+    giocatori, esito, stagione: document.getElementById('par-stagione').value || stagioneSel,
     creato: firebase.firestore.FieldValue.serverTimestamp()
   });
 
   // Reset form
   ['par-data','par-avversario','par-competizione'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('par-stagione').value = stagioneSel || '2025/2026';
   document.getElementById('par-set-d').value = '';
   document.getElementById('par-set-a').value = '';
   for (let i = 1; i <= 5; i++) {
@@ -2552,6 +2570,7 @@ function renderTabellaPartite(partite) {
       ? '<span class="chip chip-rosso">S</span>'
       : '<span class="chip chip-grigio">P</span>';
     return `<tr>
+      <td><span class="chip chip-blu" style="font-size:11px;">${p.stagione || '—'}</span></td>
       <td>${formatData(p.data)}</td>
       <td><strong>${p.avversario}</strong></td>
       <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
@@ -2980,12 +2999,19 @@ function aggiornaContatorAtleti() {
   document.getElementById('home-num-atleti').textContent = atletiInMemoria.length;
 }
 
+
+function tornaHome() {
+  mostraSchermata('home');
+}
+
 function apriStagione(stagione) {
   stagioneSel = stagione;
   document.getElementById('header-stagione').textContent = stagione;
+  const selPar = document.getElementById('par-stagione');
+  if (selPar) selPar.value = stagione;
   mostraSchermata('app');
-  mostraSezione('contabilita', document.querySelector('.nav-tab'));
-  document.querySelector('.nav-tab').classList.add('attivo');
+  mostraSezione('contabilita', document.getElementById('tab-contabilita'));
+  document.getElementById('tab-contabilita').style.display = '';
 }
 
 function apriSezioneAtleti() {
