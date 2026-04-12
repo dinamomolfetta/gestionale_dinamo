@@ -1716,6 +1716,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <option>Centrale</option>
           <option>Libero</option>
           <option>Ricevitore</option>
+          <option>Allenatore</option>
+          <option>Dirigente Acc.</option>
         </select>
       </div>
       <div class="campo-gruppo">
@@ -2298,6 +2300,8 @@ function apriModalAtleta(id) {
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
     ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('atl-ruolo').value = '';
+    document.getElementById('atl-squadra').value = '';
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
@@ -3131,7 +3135,7 @@ function apriSezioneAtleti() {
 // STAGIONI ATLETA
 // ============================================================
 const STAGIONI_LIST = ['2017/2018','2018/2019','2019/2020','2020/2021','2021/2022','2022/2023','2023/2024','2024/2025','2025/2026','2026/2027'];
-const RUOLI_LIST = ['','Palleggiatore','Schiacciatore','Opposto','Centrale','Libero','Ricevitore'];
+const RUOLI_LIST = ['','Palleggiatore','Schiacciatore','Opposto','Centrale','Libero','Ricevitore','Allenatore','Dirigente Acc.'];
 
 function renderStagioniAtleta(stagioni) {
   const div = document.getElementById('stagioni-atleta-lista');
