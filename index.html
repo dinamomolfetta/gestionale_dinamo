@@ -928,6 +928,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <select class="campo" id="filtro-squadra-atleti" style="max-width:200px;" onchange="filtraAtleti()">
           <option value="tutti">Tutte le squadre</option>
         </select>
+        <button class="btn btn-secondario" id="btn-ordina-cognome" onclick="toggleOrdineCognome(this)">A↓ Ordina per cognome</button>
         <button class="btn btn-primario" id="btn-nuovo-atleta" onclick="apriModalAtleta()">➕ Nuovo atleta</button>
       </div>
 
@@ -1207,6 +1208,87 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
   </main>
 </div>
 
+
+<!-- MODAL MODIFICA PARTITA -->
+<div class="modal-overlay" id="modal-partita">
+  <div class="modal">
+    <div class="modal-titolo">
+      <span>Modifica partita</span>
+      <button class="modal-chiudi" onclick="chiudiModalPartita()">×</button>
+    </div>
+    <div class="griglia-3">
+      <div class="campo-gruppo">
+        <label>Data</label>
+        <input type="date" class="campo" id="mpar-data">
+      </div>
+      <div class="campo-gruppo">
+        <label>Avversario</label>
+        <input type="text" class="campo" id="mpar-avversario">
+      </div>
+      <div class="campo-gruppo">
+        <label>Luogo</label>
+        <select class="campo" id="mpar-luogo">
+          <option value="casa">Casa</option>
+          <option value="trasferta">Trasferta</option>
+        </select>
+      </div>
+    </div>
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Competizione</label>
+        <input type="text" class="campo" id="mpar-competizione">
+      </div>
+      <div class="campo-gruppo">
+        <label>Risultato set (Dinamo — Avv.)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" class="campo" id="mpar-set-d" min="0" max="3" style="width:70px;text-align:center;">
+          <span style="font-weight:700;color:var(--blu);">—</span>
+          <input type="number" class="campo" id="mpar-set-a" min="0" max="3" style="width:70px;text-align:center;">
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="font-size:12px;font-weight:600;color:var(--testo-m);text-transform:uppercase;letter-spacing:0.4px;">Punteggi set</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--blu);">Set 1</span>
+          <input type="number" class="campo" id="mpar-s1d" style="width:58px;text-align:center;" placeholder="—">
+          <span style="color:var(--grigio-t);">-</span>
+          <input type="number" class="campo" id="mpar-s1a" style="width:58px;text-align:center;" placeholder="—">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--blu);">Set 2</span>
+          <input type="number" class="campo" id="mpar-s2d" style="width:58px;text-align:center;" placeholder="—">
+          <span style="color:var(--grigio-t);">-</span>
+          <input type="number" class="campo" id="mpar-s2a" style="width:58px;text-align:center;" placeholder="—">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--blu);">Set 3</span>
+          <input type="number" class="campo" id="mpar-s3d" style="width:58px;text-align:center;" placeholder="—">
+          <span style="color:var(--grigio-t);">-</span>
+          <input type="number" class="campo" id="mpar-s3a" style="width:58px;text-align:center;" placeholder="—">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--blu);">Set 4</span>
+          <input type="number" class="campo" id="mpar-s4d" style="width:58px;text-align:center;" placeholder="—">
+          <span style="color:var(--grigio-t);">-</span>
+          <input type="number" class="campo" id="mpar-s4a" style="width:58px;text-align:center;" placeholder="—">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:12px;font-weight:700;color:var(--blu);">Set 5</span>
+          <input type="number" class="campo" id="mpar-s5d" style="width:58px;text-align:center;" placeholder="—">
+          <span style="color:var(--grigio-t);">-</span>
+          <input type="number" class="campo" id="mpar-s5a" style="width:58px;text-align:center;" placeholder="—">
+        </div>
+      </div>
+    </div>
+    <div class="modal-azioni">
+      <button class="btn btn-secondario" onclick="chiudiModalPartita()">Annulla</button>
+      <button class="btn btn-primario" onclick="aggiornaPartita()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
 <!-- BADGE SALVATAGGIO -->
 <div id="badge-salvataggio">✅ Salvato</div>
 
@@ -1227,7 +1309,11 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cognome" placeholder="Cognome">
       </div>
     </div>
-    <div class="griglia-2" style="margin-top:10px;">
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>N° maglia</label>
+        <input type="number" class="campo" id="atl-maglia" placeholder="Es. 10" min="1" max="99">
+      </div>
       <div class="campo-gruppo">
         <label>Data di nascita</label>
         <input type="date" class="campo" id="atl-nascita">
@@ -1674,12 +1760,21 @@ function aggiornaSelectSquadreSessione() {
   sel.innerHTML = '<option value="">— nessuna —</option>' + sq.map(s => `<option>${s}</option>`).join('');
 }
 
+let ordinaPerCognome = false;
+
+function toggleOrdineCognome(btn) {
+  ordinaPerCognome = !ordinaPerCognome;
+  btn.textContent = ordinaPerCognome ? 'A↑ Ordine originale' : 'A↓ Ordina per cognome';
+  filtraAtleti();
+}
+
 function filtraAtleti() {
   const testo = document.getElementById('ricerca-atleta')?.value.toLowerCase() || '';
   const sq    = document.getElementById('filtro-squadra-atleti')?.value || 'tutti';
-  let lista   = atletiInMemoria;
-  if (testo) lista = lista.filter(a => (a.nome + ' ' + a.cognome).toLowerCase().includes(testo));
+  let lista   = [...atletiInMemoria];
+  if (testo) lista = lista.filter(a => (a.cognome + ' ' + a.nome).toLowerCase().includes(testo));
   if (sq !== 'tutti') lista = lista.filter(a => a.squadra === sq);
+  if (ordinaPerCognome) lista.sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'', 'it'));
   renderAtleti(lista);
 }
 
@@ -1707,7 +1802,7 @@ function renderAtleti(lista) {
     <div class="atleta-card">
       <div class="atleta-avatar">${(a.nome||'?')[0]}${(a.cognome||'')[0]}</div>
       <div class="atleta-info">
-        <div class="atleta-nome">${a.nome} ${a.cognome}</div>
+        <div class="atleta-nome">${a.maglia ? "<span style='font-size:12px;font-weight:700;color:var(--arancio);margin-right:6px;'>#"+a.maglia+"</span>" : ""}${a.cognome} ${a.nome}</div>
         <div class="atleta-meta">${a.squadra || '—'} · ${a.ruolo || '—'} · <span class="chip ${stati[a.stato_tess]||'chip-grigio'}">${nomiStati[a.stato_tess]||'—'}</span></div>
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
       </div>
@@ -1728,6 +1823,7 @@ function apriModalAtleta(id) {
     const a = atletiInMemoria.find(x => x.id === id);
     if (!a) return;
     document.getElementById('modal-atleta-titolo').textContent = 'Modifica atleta';
+    document.getElementById('atl-maglia').value = a.maglia || '';
     document.getElementById('atl-nome').value = a.nome || '';
     document.getElementById('atl-cognome').value = a.cognome || '';
     document.getElementById('atl-nascita').value = a.nascita || '';
@@ -1739,7 +1835,7 @@ function apriModalAtleta(id) {
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-nome','atl-cognome','atl-nascita','atl-cert','atl-telefono','atl-note'].forEach(id => document.getElementById(id).value = '');
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-cert','atl-telefono','atl-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   modal.classList.add('aperto');
@@ -1758,6 +1854,7 @@ async function salvaAtleta() {
     nome, cognome,
     nascita:    document.getElementById('atl-nascita').value,
     squadra:    document.getElementById('atl-squadra').value,
+    maglia:     document.getElementById('atl-maglia')?.value ? parseInt(document.getElementById('atl-maglia').value) : null,
     ruolo:      document.getElementById('atl-ruolo').value,
     stato_tess: document.getElementById('atl-stato-tess').value,
     cert:       document.getElementById('atl-cert').value,
@@ -2076,7 +2173,7 @@ function renderTabellaPartite(partite) {
       <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
       <td style="font-size:12px; color:var(--testo-m);">${punteggi||'—'}</td>
       <td>${esitoChip}</td>
-      <td>${pEdit ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button>` : ''}</td>
+      <td>${pEdit ? `<div style="display:flex;gap:6px;"><button class="btn btn-secondario btn-piccolo" onclick="apriModalPartita('${p.id}')">✏️</button><button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button></div>` : ''}</td>
     </tr>`;
   }).join('');
 }
@@ -2329,6 +2426,55 @@ Il JSON deve avere questa struttura esatta:
     status.textContent = '❌ Errore durante l\'analisi. Riprova o inserisci manualmente.';
     console.error(e);
   }
+}
+
+
+let partitaInModifica = null;
+
+function apriModalPartita(id) {
+  const p = partitiInMemoria.find(x => x.id === id);
+  if (!p) return;
+  partitaInModifica = id;
+  document.getElementById('mpar-data').value = p.data || '';
+  document.getElementById('mpar-avversario').value = p.avversario || '';
+  document.getElementById('mpar-luogo').value = p.luogo || 'trasferta';
+  document.getElementById('mpar-competizione').value = p.competizione || '';
+  document.getElementById('mpar-set-d').value = p.set_dinamo || 0;
+  document.getElementById('mpar-set-a').value = p.set_avversario || 0;
+  for (let i = 1; i <= 5; i++) {
+    const s = (p.set_punteggi || []).find(x => x.set === i);
+    document.getElementById('mpar-s'+i+'d').value = s ? s.dinamo : '';
+    document.getElementById('mpar-s'+i+'a').value = s ? s.avversario : '';
+  }
+  document.getElementById('modal-partita').classList.add('aperto');
+}
+
+function chiudiModalPartita() {
+  document.getElementById('modal-partita').classList.remove('aperto');
+  partitaInModifica = null;
+}
+
+async function aggiornaPartita() {
+  if (!partitaInModifica) return;
+  const setD = parseInt(document.getElementById('mpar-set-d').value) || 0;
+  const setA = parseInt(document.getElementById('mpar-set-a').value) || 0;
+  const setPunteggi = [];
+  for (let i = 1; i <= 5; i++) {
+    const d = document.getElementById('mpar-s'+i+'d').value;
+    const a = document.getElementById('mpar-s'+i+'a').value;
+    if (d !== '' && a !== '') setPunteggi.push({ set: i, dinamo: parseInt(d)||0, avversario: parseInt(a)||0 });
+  }
+  const esito = setD > setA ? 'vittoria' : setD < setA ? 'sconfitta' : 'pareggio';
+  await db.collection('partite_dinamo').doc(partitaInModifica).update({
+    data: document.getElementById('mpar-data').value,
+    avversario: document.getElementById('mpar-avversario').value.trim(),
+    luogo: document.getElementById('mpar-luogo').value,
+    competizione: document.getElementById('mpar-competizione').value.trim(),
+    set_dinamo: setD, set_avversario: setA, set_punteggi: setPunteggi, esito,
+    aggiornato: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  mostraBadge();
+  chiudiModalPartita();
 }
 
 </script>
