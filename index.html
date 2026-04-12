@@ -1352,6 +1352,30 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
     </div>
     <div class="griglia-2" style="margin-top:10px;">
       <div class="campo-gruppo">
+        <label>Luogo di nascita</label>
+        <input type="text" class="campo" id="atl-luogo-nascita" placeholder="Città">
+      </div>
+      <div class="campo-gruppo">
+        <label>Codice fiscale</label>
+        <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
+      </div>
+    </div>
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Altezza (cm)</label>
+        <input type="number" class="campo" id="atl-altezza" placeholder="Es. 185" min="100" max="230">
+      </div>
+      <div class="campo-gruppo">
+        <label>Peso (kg)</label>
+        <input type="number" class="campo" id="atl-peso" placeholder="Es. 80" min="30" max="200">
+      </div>
+      <div class="campo-gruppo">
+        <label>Email</label>
+        <input type="email" class="campo" id="atl-email" placeholder="atleta@email.com">
+      </div>
+    </div>
+    <div class="griglia-2" style="margin-top:10px;">
+      <div class="campo-gruppo">
         <label>Scad. certificato medico</label>
         <input type="date" class="campo" id="atl-cert">
       </div>
@@ -1359,6 +1383,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <label>Telefono / contatto</label>
         <input type="text" class="campo" id="atl-telefono" placeholder="Opzionale">
       </div>
+    </div>
+    <div class="campo-gruppo" style="margin-top:10px;">
+      <label>Indirizzo</label>
+      <input type="text" class="campo" id="atl-indirizzo" placeholder="Via, città, CAP">
     </div>
     <div class="campo-gruppo" style="margin-top:10px;">
       <label>Note</label>
@@ -1836,10 +1864,16 @@ function apriModalAtleta(id) {
     document.getElementById('atl-stato-tess').value = a.stato_tess || 'in_corso';
     document.getElementById('atl-cert').value = a.cert || '';
     document.getElementById('atl-telefono').value = a.telefono || '';
+    document.getElementById('atl-email').value = a.email || '';
+    document.getElementById('atl-cf').value = a.cf || '';
+    document.getElementById('atl-luogo-nascita').value = a.luogo_nascita || '';
+    document.getElementById('atl-altezza').value = a.altezza || '';
+    document.getElementById('atl-peso').value = a.peso || '';
+    document.getElementById('atl-indirizzo').value = a.indirizzo || '';
     document.getElementById('atl-note').value = a.note || '';
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
-    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-cert','atl-telefono','atl-note'].forEach(id => document.getElementById(id).value = '');
+    ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-indirizzo','atl-note'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   modal.classList.add('aperto');
@@ -1858,12 +1892,18 @@ async function salvaAtleta() {
     nome, cognome,
     nascita:    document.getElementById('atl-nascita').value,
     squadra:    document.getElementById('atl-squadra').value,
-    maglia:     document.getElementById('atl-maglia')?.value ? parseInt(document.getElementById('atl-maglia').value) : null,
-    ruolo:      document.getElementById('atl-ruolo').value,
-    stato_tess: document.getElementById('atl-stato-tess').value,
-    cert:       document.getElementById('atl-cert').value,
-    telefono:   document.getElementById('atl-telefono').value.trim(),
-    note:       document.getElementById('atl-note').value.trim(),
+    maglia:        document.getElementById('atl-maglia')?.value ? parseInt(document.getElementById('atl-maglia').value) : null,
+    ruolo:         document.getElementById('atl-ruolo').value,
+    stato_tess:    document.getElementById('atl-stato-tess').value,
+    cert:          document.getElementById('atl-cert').value,
+    telefono:      document.getElementById('atl-telefono').value.trim(),
+    email:         document.getElementById('atl-email').value.trim(),
+    cf:            document.getElementById('atl-cf').value.trim().toUpperCase(),
+    luogo_nascita: document.getElementById('atl-luogo-nascita').value.trim(),
+    altezza:       document.getElementById('atl-altezza').value ? parseInt(document.getElementById('atl-altezza').value) : null,
+    peso:          document.getElementById('atl-peso').value ? parseInt(document.getElementById('atl-peso').value) : null,
+    indirizzo:     document.getElementById('atl-indirizzo').value.trim(),
+    note:          document.getElementById('atl-note').value.trim(),
     aggiornato: firebase.firestore.FieldValue.serverTimestamp(),
     stagione:   STAGIONE
   };
