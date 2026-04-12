@@ -1738,12 +1738,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       </div>
       <div class="campo-gruppo">
         <label>Stato tesseramento</label>
-        <select class="campo" id="atl-stato-tess">
-          <option value="in_corso">In corso</option>
-          <option value="tesserato">Tesserato</option>
-          <option value="non_tesserato">Non tesserato</option>
-          <option value="sospeso">Sospeso</option>
-        </select>
+
       </div>
     </div>
     <!-- Residenza su campi separati -->
@@ -2298,7 +2293,6 @@ function apriModalAtleta(id) {
     document.getElementById('atl-squadra').value = a.squadra || '';
     document.getElementById('atl-ruolo').value = a.ruolo || '';
     aggiornaVisibilitaCampiAtleta();
-    document.getElementById('atl-stato-tess').value = a.stato_tess || 'in_corso';
     document.getElementById('atl-fipav').value = a.fipav || '';
     document.getElementById('atl-cert').value = a.cert || '';
     document.getElementById('atl-telefono').value = a.telefono || '';
@@ -2318,7 +2312,6 @@ function apriModalAtleta(id) {
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
     aggiornaVisibilitaCampiAtleta();
-    document.getElementById('atl-stato-tess').value = 'in_corso';
   }
   // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
   if (id) {
