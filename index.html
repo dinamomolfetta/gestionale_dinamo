@@ -998,7 +998,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
     <button class="nav-tab attivo" onclick="mostraSezione('contabilita', this)" style="display:none" id="tab-contabilita">💰 Contabilità</button>
     <button class="nav-tab" onclick="mostraSezione('atleti', this)">🏐 Atleti</button>
     <button class="nav-tab" onclick="mostraSezione('presenze', this)">📋 Presenze</button>
-    <button class="nav-tab" onclick="mostraSezione('statistiche', this)">📈 Statistiche</button>
+    <button class="nav-tab" onclick="mostraSezione('statistiche', this)">⚽ Gare</button>
     <button class="nav-tab" id="tab-admin" style="display:none" onclick="mostraSezione('admin', this)">⚙️ Admin</button>
   </nav>
 
@@ -2480,7 +2480,9 @@ function formatData(str) {
 // STATISTICHE — PARTITE
 // ============================================================
 function avviaListenerPartite() {
+  if (unsub.partite) unsub.partite();
   unsub.partite = db.collection('partite_dinamo')
+    .where('stagione', '==', stagioneSel)
     .orderBy('data','desc')
     .onSnapshot(snap => {
       partitiInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -3026,6 +3028,7 @@ function apriStagione(stagione) {
   document.getElementById('header-stagione').textContent = stagione;
   const selPar = document.getElementById('par-stagione');
   if (selPar) selPar.value = stagione;
+  avviaListenerPartite();
   mostraSchermata('app');
   mostraSezione('contabilita', document.getElementById('tab-contabilita'));
   document.getElementById('tab-contabilita').style.display = '';
