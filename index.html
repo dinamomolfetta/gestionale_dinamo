@@ -1901,33 +1901,17 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <input type="text" class="campo" id="atl-cf" placeholder="RSSMRA80A01H501Z" maxlength="16" style="text-transform:uppercase;">
       </div>
     </div>
-    <!-- Riga: N°maglia + Ruolo + Squadra + Codice Fipav -->
-    <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr 1fr; gap:10px; margin-top:10px;">
-      <div class="campo-gruppo">
-        <label>N° maglia</label>
-        <input type="number" class="campo" id="atl-maglia" placeholder="10" min="1" max="99">
-      </div>
-      <div class="campo-gruppo">
-        <label>Ruolo</label>
-        <select class="campo" id="atl-ruolo">
-          <option value="">— non specificato —</option>
-          <option>Palleggiatore</option>
-          <option>Schiacciatore</option>
-          <option>Opposto</option>
-          <option>Centrale</option>
-          <option>Libero</option>
-          <option>Ricevitore</option>
-        </select>
-      </div>
-      <div class="campo-gruppo">
-        <label>Squadra</label>
-        <select class="campo" id="atl-squadra"></select>
-      </div>
+    <!-- Codice Fipav -->
+    <div style="margin-top:10px; max-width:220px;">
       <div class="campo-gruppo">
         <label>Codice Fipav</label>
         <input type="text" class="campo" id="atl-fipav" placeholder="Codice numerico">
       </div>
     </div>
+    <!-- Campi nascosti per compatibilità JS -->
+    <input type="hidden" id="atl-maglia">
+    <input type="hidden" id="atl-ruolo">
+    <input type="hidden" id="atl-squadra">
     <!-- Riga: Altezza + Peso + Cert. medico -->
     <div class="griglia-3" style="margin-top:10px;">
       <div class="campo-gruppo">
@@ -2491,8 +2475,7 @@ function renderAtleti(lista) {
 function apriModalAtleta(id) {
   atletaInModifica = id || null;
   const modal = document.getElementById('modal-atleta');
-  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
-  document.getElementById('atl-squadra').innerHTML = '<option value="">— nessuna —</option>' + sq.map(s => `<option>${s}</option>`).join('');
+  // atl-squadra, atl-maglia, atl-ruolo ora sono campi hidden — nessuna inizializzazione select necessaria
   if (id) {
     const a = atletiInMemoria.find(x => x.id === id);
     if (!a) return;
@@ -2522,8 +2505,7 @@ function apriModalAtleta(id) {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
     ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     const sessoEl = document.getElementById('atl-sesso'); if(sessoEl) sessoEl.value = '';
-    document.getElementById('atl-ruolo').value = '';
-    document.getElementById('atl-squadra').value = '';
+
   }
   // Carica stagioni dell'atleta specifico (o array vuoto per nuovo)
   if (id) {
