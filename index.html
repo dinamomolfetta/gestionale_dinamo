@@ -1296,10 +1296,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           </div>
           <div id="import-status" style="display:none; margin-top:8px; padding:10px 14px; border-radius:var(--raggio); font-size:13px;"></div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
           <div class="campo-gruppo">
             <label>Stagione</label>
-            <select class="campo" id="par-stagione" onchange="renderPresenzaPartita()">
+            <select class="campo" id="par-stagione" onchange="aggiornaStagioneGara()">
               <option value="2017/2018">2017/2018</option>
               <option value="2018/2019">2018/2019</option>
               <option value="2019/2020">2019/2020</option>
@@ -1312,6 +1312,18 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
               <option value="2026/2027">2026/2027</option>
             </select>
           </div>
+          <div class="campo-gruppo">
+            <label>Squadra</label>
+            <select class="campo" id="par-squadra-gare" onchange="renderPresenzaPartita()">
+              <option value="">— seleziona squadra —</option>
+            </select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Competizione</label>
+            <input type="text" class="campo" id="par-competizione" placeholder="es. Serie D, Coppa...">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-top:10px;">
           <div class="campo-gruppo">
             <label>Data</label>
             <input type="date" class="campo" id="par-data">
@@ -1327,21 +1339,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
               <option value="trasferta">Trasferta</option>
             </select>
           </div>
-        </div>
-        <div class="griglia-2" style="margin-top:10px;">
           <div class="campo-gruppo">
-            <label>Competizione</label>
-            <input type="text" class="campo" id="par-competizione" placeholder="es. Serie D, Coppa...">
-          </div>
-          <div class="campo-gruppo">
-            <label>Risultato (set Dinamo - set avversario)</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="number" class="campo" id="par-set-d" min="0" max="3" placeholder="0" style="width:70px; text-align:center;">
-              <span style="font-weight:700; color:var(--blu);">—</span>
-              <input type="number" class="campo" id="par-set-a" min="0" max="3" placeholder="0" style="width:70px; text-align:center;">
+            <label>Risultato (Dinamo — Avv.)</label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" class="campo" id="par-set-d" min="0" max="3" placeholder="0" style="width:60px;text-align:center;">
+              <span style="font-weight:700;color:var(--blu);">—</span>
+              <input type="number" class="campo" id="par-set-a" min="0" max="3" placeholder="0" style="width:60px;text-align:center;">
             </div>
           </div>
         </div>
+
 
         <!-- Punteggi set -->
         <div style="margin-top:12px;">
@@ -1382,11 +1389,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
         <!-- Presenze partita -->
         <div style="margin-top:14px;">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+          <div style="margin-bottom:8px;">
             <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Giocatori in campo</label>
-            <select class="campo" id="par-squadra-gare" style="max-width:200px;font-size:13px;" onchange="renderPresenzaPartita()">
-              <option value="">Tutte le squadre</option>
-            </select>
           </div>
           <div id="presenze-partita-lista" style="margin-top:4px; display:flex; flex-wrap:wrap; gap:8px;"></div>
         </div>
@@ -1430,11 +1434,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <table>
             <thead>
               <tr>
-                <th>N°</th>
                 <th>Giocatore</th>
                 <th>Ruolo</th>
-                <th>Partite</th>
-                <th>% presenze</th>
+                <th id="rosa-stagioni-headers"></th>
+                <th>Totale presenze</th>
               </tr>
             </thead>
             <tbody id="tbody-rosa"></tbody>
@@ -2714,12 +2717,12 @@ function renderPresenzaPartita() {
   const stagPar = document.getElementById('par-stagione')?.value || stagioneSel;
   const sqPar   = document.getElementById('par-squadra-gare')?.value || '';
 
-  // Filtra atleti: devono avere registrazione per quella stagione (e squadra se filtrata)
+  // Filtra atleti: devono avere stagione E squadra corrispondente (entrambi obbligatori)
   const atletiFiltrati = atletiInMemoria.filter(a => {
     const stagioni = a.stagioni || [];
-    if (!stagioni.length) return false; // escludi atleti senza stagioni registrate
+    if (!stagioni.length) return false;
     return stagioni.some(s => {
-      const stMatch = stagPar ? s.stagione === stagPar : true;
+      const stMatch = s.stagione === stagPar;
       const sqMatch = sqPar ? s.squadra === sqPar : true;
       return stMatch && sqMatch;
     });
@@ -2845,24 +2848,36 @@ function renderTabellaPartite(partite) {
 
 function renderRosa(partite) {
   const tbody = document.getElementById('tbody-rosa');
-  // Conta presenze per atleta
-  const conteggio = {};
-  partite.forEach(p => {
+
+  // Raccogli tutte le stagioni presenti nelle partite
+  const stagioni = [...new Set(partitiInMemoria.map(p => p.stagione).filter(Boolean))].sort();
+
+  // Aggiorna header stagioni
+  const thStag = document.getElementById('rosa-stagioni-headers');
+  if (thStag) thStag.innerHTML = stagioni.map(s => `<th style="font-size:11px;">${s}</th>`).join('');
+
+  // Conta presenze per atleta per stagione
+  const conteggio = {}; // { atletaId: { stagione: count } }
+  partitiInMemoria.forEach(p => {
     (p.giocatori||[]).forEach(g => {
-      if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome, partite: 0 };
-      conteggio[g.id].partite++;
+      if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome };
+      const stag = p.stagione || '—';
+      conteggio[g.id][stag] = (conteggio[g.id][stag] || 0) + 1;
     });
   });
 
-  // Merge con atleti registrati
-  const pg = partite.length;
-  const tutti = atletiInMemoria.map(a => ({
-    id: a.id,
-    nome: a.nome + ' ' + a.cognome,
-    ruolo: a.ruolo || '—',
-    partite: conteggio[a.id]?.partite || 0,
-    perc: pg ? Math.round((conteggio[a.id]?.partite||0)/pg*100) : 0
-  })).sort((a,b) => b.partite - a.partite);
+  // Solo atleti che hanno almeno una presenza
+  const tutti = Object.entries(conteggio).map(([id, dati]) => {
+    const atleta = atletiInMemoria.find(a => a.id === id);
+    const totale = stagioni.reduce((s, st) => s + (dati[st] || 0), 0);
+    const stagInfo = atleta?.stagioni?.[0] || {};
+    return {
+      id, nome: dati.nome || (atleta ? atleta.cognome + ' ' + atleta.nome : id),
+      ruolo: stagInfo.ruolo || atleta?.ruolo || '—',
+      presenzeStagioni: stagioni.map(s => dati[s] || 0),
+      totale
+    };
+  }).sort((a,b) => b.totale - a.totale);
 
   if (!tutti.length) {
     document.getElementById('vuoto-rosa').style.display = '';
@@ -2870,20 +2885,13 @@ function renderRosa(partite) {
     return;
   }
   document.getElementById('vuoto-rosa').style.display = 'none';
-  tbody.innerHTML = tutti.map((a,i) => `
+
+  tbody.innerHTML = tutti.map(a => `
     <tr>
-      <td style="font-weight:700; color:var(--blu);">${i+1}</td>
       <td><strong>${a.nome}</strong></td>
-      <td>${a.ruolo}</td>
-      <td>${a.partite}</td>
-      <td>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div style="flex:1; height:6px; background:var(--grigio-m); border-radius:3px;">
-            <div style="width:${a.perc}%; height:100%; background:var(--arancio); border-radius:3px;"></div>
-          </div>
-          <span style="font-size:12px; font-weight:700; min-width:32px;">${a.perc}%</span>
-        </div>
-      </td>
+      <td style="font-size:12px;color:var(--testo-m);">${a.ruolo}</td>
+      ${a.presenzeStagioni.map(n => `<td style="text-align:center;font-weight:${n>0?'700':'400'};color:${n>0?'var(--blu)':'var(--grigio-t)'};">${n>0?n:'—'}</td>`).join('')}
+      <td style="text-align:center;font-weight:700;color:var(--arancio);font-size:15px;">${a.totale}</td>
     </tr>
   `).join('');
 }
@@ -3557,6 +3565,22 @@ function visualizzaStaff(id) {
     `Tel: ${val(s.telefono)} | Email: ${val(s.email)}\n` +
     `Note: ${val(s.note)}`
   );
+}
+
+
+function aggiornaStagioneGara() {
+  // Aggiorna il select squadra in base alla stagione selezionata
+  const stag = document.getElementById('par-stagione')?.value || '';
+  const sq = document.getElementById('par-squadra-gare');
+  if (!sq) return;
+  // Squadre degli atleti registrati per quella stagione
+  const squadre = [...new Set(
+    atletiInMemoria
+      .flatMap(a => (a.stagioni||[]).filter(s => s.stagione === stag).map(s => s.squadra))
+      .filter(Boolean)
+  )].sort();
+  sq.innerHTML = '<option value="">— seleziona squadra —</option>' + squadre.map(s => `<option>${s}</option>`).join('');
+  renderPresenzaPartita();
 }
 
 </script>
