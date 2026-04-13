@@ -232,6 +232,30 @@ body {
   .stagioni-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+
+/* MODAL PRESENZE HOME */
+#modal-home-presenze {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+#modal-home-presenze.aperto { display: flex; }
+.modal-presenze-box {
+  background: var(--bianco);
+  border-radius: var(--raggio-lg);
+  box-shadow: var(--ombra-lg);
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 28px 28px 24px;
+}
+
 /* ============================================================
    SCHERMATA DI LOGIN
    ============================================================ */
@@ -985,15 +1009,30 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
   <div class="home-main">
 
-    <!-- Card atleti -->
+    <!-- Card atleti + presenze -->
     <div class="home-titolo-sezione">Gestione rosa</div>
-    <div class="card-atleti" onclick="apriSezioneAtleti('')">
-      <span class="card-atleti-icon">🏐</span>
-      <div class="card-atleti-testo">
-        <div class="card-atleti-titolo">Atleti</div>
-        <div class="card-atleti-sub">Anagrafica, tesseramenti, schede personali</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+
+      <!-- Card Atleti -->
+      <div class="card-atleti" onclick="apriSezioneAtleti('')" style="margin-bottom:0;">
+        <span class="card-atleti-icon" style="font-size:32px;">🏐</span>
+        <div class="card-atleti-testo">
+          <div class="card-atleti-titolo" style="font-size:17px;">Atleti</div>
+          <div class="card-atleti-sub">Anagrafica e schede</div>
+        </div>
+        <div class="card-atleti-badge" id="home-num-atleti">0</div>
       </div>
-      <div class="card-atleti-badge" id="home-num-atleti">0</div>
+
+      <!-- Card Presenze -->
+      <div class="card-atleti" onclick="apriHomePresenze()" style="margin-bottom:0; background:var(--blu-m);">
+        <span class="card-atleti-icon" style="font-size:32px;">📊</span>
+        <div class="card-atleti-testo">
+          <div class="card-atleti-titolo" style="font-size:17px;">Presenze</div>
+          <div class="card-atleti-sub">Statistiche per stagione</div>
+        </div>
+        <div class="card-atleti-badge" id="home-num-presenze" style="background:var(--arancio);">0</div>
+      </div>
+
     </div>
 
     <!-- Card stagioni -->
@@ -1596,6 +1635,35 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
   #scheda-atleta-print { display:block !important; }
 }
 </style>
+
+
+<!-- MODAL PRESENZE HOME -->
+<div id="modal-home-presenze">
+  <div class="modal-presenze-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:20px;font-weight:700;color:var(--blu);">📊 Presenze atleti</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select class="campo" id="pres-ordine" style="max-width:200px;" onchange="renderHomePresenze()">
+          <option value="cognome">A→Z (cognome)</option>
+          <option value="cognome_desc">Z→A (cognome)</option>
+          <option value="totale_desc">Più presenze</option>
+          <option value="totale_asc">Meno presenze</option>
+          <option value="stagione_desc">Ultima stagione</option>
+        </select>
+        <button class="btn btn-secondario btn-piccolo" onclick="chiudiHomePresenze()">✕ Chiudi</button>
+      </div>
+    </div>
+    <div class="tabella-wrap">
+      <table id="tabella-home-presenze" style="font-size:13px;">
+        <thead id="thead-home-presenze"></thead>
+        <tbody id="tbody-home-presenze"></tbody>
+      </table>
+      <div id="vuoto-home-presenze" style="display:none; text-align:center; padding:40px; color:var(--grigio-t);">
+        Nessuna presenza registrata
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL MODIFICA PARTITA -->
 <div class="modal-overlay" id="modal-partita">
@@ -3581,6 +3649,106 @@ function aggiornaStagioneGara() {
   )].sort();
   sq.innerHTML = '<option value="">— seleziona squadra —</option>' + squadre.map(s => `<option>${s}</option>`).join('');
   renderPresenzaPartita();
+}
+
+
+// ============================================================
+// MODAL PRESENZE HOME
+// ============================================================
+function apriHomePresenze() {
+  document.getElementById('modal-home-presenze').classList.add('aperto');
+  renderHomePresenze();
+}
+
+function chiudiHomePresenze() {
+  document.getElementById('modal-home-presenze').classList.remove('aperto');
+}
+
+function renderHomePresenze() {
+  const thead = document.getElementById('thead-home-presenze');
+  const tbody = document.getElementById('tbody-home-presenze');
+  const vuoto = document.getElementById('vuoto-home-presenze');
+  const ordine = document.getElementById('pres-ordine')?.value || 'cognome';
+
+  // Raccogli tutte le stagioni dalle partite
+  const stagioni = [...new Set(partitiInMemoria.map(p => p.stagione).filter(Boolean))].sort();
+
+  if (!partitiInMemoria.length) {
+    vuoto.style.display = '';
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+    // Aggiorna badge
+    document.getElementById('home-num-presenze').textContent = 0;
+    return;
+  }
+  vuoto.style.display = 'none';
+
+  // Conta presenze per atleta per stagione
+  const conteggio = {};
+  partitiInMemoria.forEach(p => {
+    (p.giocatori||[]).forEach(g => {
+      if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome, stagioni: {} };
+      const stag = p.stagione || '—';
+      conteggio[g.id].stagioni[stag] = (conteggio[g.id].stagioni[stag] || 0) + 1;
+    });
+  });
+
+  // Costruisci lista atleti con presenze
+  let lista = Object.entries(conteggio).map(([id, dati]) => {
+    const atleta = atletiInMemoria.find(a => a.id === id);
+    const totale = stagioni.reduce((s, st) => s + (dati.stagioni[st] || 0), 0);
+    const ultimaStagione = stagioni.filter(s => dati.stagioni[s] > 0).sort().reverse()[0] || '';
+    const stagInfo = atleta?.stagioni?.find(s => s.stagione === ultimaStagione) || {};
+    return {
+      id,
+      cognome: atleta?.cognome || dati.nome?.split(' ')[0] || '—',
+      nome: atleta?.nome || dati.nome?.split(' ').slice(1).join(' ') || '—',
+      ruolo: stagInfo.ruolo || atleta?.ruolo || '—',
+      presenzeStagioni: stagioni.map(s => dati.stagioni[s] || 0),
+      totale,
+      ultimaStagione
+    };
+  });
+
+  // Ordinamento
+  switch(ordine) {
+    case 'cognome':      lista.sort((a,b) => a.cognome.localeCompare(b.cognome,'it')); break;
+    case 'cognome_desc': lista.sort((a,b) => b.cognome.localeCompare(a.cognome,'it')); break;
+    case 'totale_desc':  lista.sort((a,b) => b.totale - a.totale); break;
+    case 'totale_asc':   lista.sort((a,b) => a.totale - b.totale); break;
+    case 'stagione_desc':lista.sort((a,b) => {
+      if (b.ultimaStagione !== a.ultimaStagione) return b.ultimaStagione.localeCompare(a.ultimaStagione);
+      return b.totale - a.totale;
+    }); break;
+  }
+
+  // Aggiorna badge totale atleti con presenze
+  document.getElementById('home-num-presenze').textContent = lista.length;
+
+  // Header
+  thead.innerHTML = `<tr>
+    <th style="text-align:left;">Atleta</th>
+    <th style="text-align:left;font-size:11px;">Ruolo</th>
+    ${stagioni.map(s => `<th style="text-align:center;font-size:11px;white-space:nowrap;">${s}</th>`).join('')}
+    <th style="text-align:center;color:var(--arancio);">Totale</th>
+  </tr>`;
+
+  // Righe
+  tbody.innerHTML = lista.map(a => `
+    <tr style="border-bottom:1px solid var(--grigio-m);">
+      <td style="padding:8px 6px;font-weight:600;">${a.cognome} ${a.nome}</td>
+      <td style="padding:8px 6px;font-size:12px;color:var(--testo-m);">${a.ruolo}</td>
+      ${a.presenzeStagioni.map(n => `
+        <td style="text-align:center;padding:8px 6px;">
+          ${n > 0 
+            ? `<span style="background:var(--blu-l);color:var(--blu);font-weight:700;padding:2px 8px;border-radius:10px;">${n}</span>`
+            : `<span style="color:var(--grigio-m);">—</span>`}
+        </td>`).join('')}
+      <td style="text-align:center;padding:8px 6px;">
+        <span style="background:var(--arancio);color:#fff;font-weight:800;padding:3px 10px;border-radius:10px;">${a.totale}</span>
+      </td>
+    </tr>
+  `).join('');
 }
 
 </script>
