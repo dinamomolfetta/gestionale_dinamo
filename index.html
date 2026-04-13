@@ -2350,9 +2350,13 @@ function filtraAtleti() {
   const sq    = document.getElementById('filtro-squadra-atleti')?.value || 'tutti';
   let lista   = [...atletiInMemoria];
 
-  // Filtra per stagione se impostata dalla home
+  // Filtra per stagione: se impostata mostra SOLO atleti con quella stagione
+  // se non impostata (card Atleti dalla home) mostra tutti
   if (filtroStagioneAtleti) {
-    lista = lista.filter(a => (a.stagioni||[]).some(s => s.stagione === filtroStagioneAtleti));
+    lista = lista.filter(a => {
+      const stagioni = a.stagioni || [];
+      return stagioni.length > 0 && stagioni.some(s => s.stagione === filtroStagioneAtleti);
+    });
   }
   if (testo) lista = lista.filter(a => (a.cognome + ' ' + a.nome).toLowerCase().includes(testo));
   if (sq !== 'tutti') lista = lista.filter(a => (a.stagioni||[]).some(s => s.squadra === sq));
@@ -3317,6 +3321,7 @@ function rimuoviFiltroStagione() {
   filtroStagioneAtleti = '';
   aggiornaBadgeStagioneAtleti('');
   filtraAtleti();
+  renderStaff();
 }
 
 
@@ -3410,6 +3415,7 @@ function avviaListenerStaff() {
   unsub.staff = db.collection('staff_dinamo').onSnapshot(snap => {
     staffInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderStaff();
+    // renderStaff già tiene conto di filtroStagioneAtleti
   });
 }
 
@@ -3417,17 +3423,24 @@ function renderStaff() {
   const div = document.getElementById('lista-staff');
   const kpi = document.getElementById('kpi-staff-tot');
   if (!div) return;
-  if (kpi) kpi.textContent = staffInMemoria.length;
   const pEdit = ['admin','editor'].includes(ruoloCorrente);
 
-  if (!staffInMemoria.length) {
+  // Filtra staff per stagione (usa campo stagione salvato nel documento)
+  let lista = [...staffInMemoria];
+  if (filtroStagioneAtleti) {
+    lista = lista.filter(s => s.stagione === filtroStagioneAtleti);
+  }
+
+  if (kpi) kpi.textContent = lista.length;
+
+  if (!lista.length) {
     div.innerHTML = '';
     document.getElementById('vuoto-staff').style.display = '';
     return;
   }
   document.getElementById('vuoto-staff').style.display = 'none';
 
-  const lista = [...staffInMemoria].sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+  lista = lista.sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
   div.innerHTML = lista.map(s => `
     <div class="atleta-card">
       <div class="atleta-avatar" style="background:var(--blu-l);color:var(--blu);">${(s.cognome||'?')[0]}${(s.nome||'?')[0]}</div>
