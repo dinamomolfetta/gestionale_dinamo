@@ -2394,8 +2394,18 @@ function renderAtleti(lista) {
     <div class="atleta-card">
       <div class="atleta-avatar">${(a.nome||'?')[0]}${(a.cognome||'')[0]}</div>
       <div class="atleta-info">
-        <div class="atleta-nome">${a.maglia ? "<span style='font-size:12px;font-weight:700;color:var(--arancio);margin-right:6px;'>#"+a.maglia+"</span>" : ""}${a.cognome} ${a.nome}</div>
-        <div class="atleta-meta">${a.squadra || '—'} · ${a.ruolo || '—'}</div>
+        <div class="atleta-nome">${a.cognome} ${a.nome}</div>
+        <div class="atleta-meta" style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">
+          ${(a.stagioni&&a.stagioni.length ? a.stagioni : []).sort((x,y)=>y.stagione.localeCompare(x.stagione)).map(s =>
+            `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+              <span style="background:var(--blu-l);color:var(--blu);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;min-width:72px;text-align:center;">${s.stagione}</span>
+              ${s.maglia ? `<span style="color:var(--arancio);font-weight:700;font-size:11px;">#${s.maglia}</span>` : ''}
+              <span style="color:var(--testo-m);">${s.squadra||'—'}</span>
+              ${s.ruolo ? `<span style="color:var(--grigio-t);">· ${s.ruolo}</span>` : ''}
+            </div>`
+          ).join('')}
+          ${!a.stagioni||!a.stagioni.length ? `<span style="color:var(--grigio-t);font-size:12px;">Nessuna stagione registrata</span>` : ''}
+        </div>
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
       </div>
       <div class="atleta-azioni">
