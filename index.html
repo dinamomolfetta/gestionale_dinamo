@@ -1797,7 +1797,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <span id="modal-atleta-titolo">Nuovo atleta</span>
       <button class="modal-chiudi" onclick="chiudiModalAtleta()">×</button>
     </div>
-    <div class="griglia-2">
+    <div style="display:grid; grid-template-columns:1fr 1fr 0.5fr; gap:10px;">
       <div class="campo-gruppo">
         <label>Nome *</label>
         <input type="text" class="campo" id="atl-nome" placeholder="Nome">
@@ -1805,6 +1805,14 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <div class="campo-gruppo">
         <label>Cognome *</label>
         <input type="text" class="campo" id="atl-cognome" placeholder="Cognome">
+      </div>
+      <div class="campo-gruppo">
+        <label>Sesso</label>
+        <select class="campo" id="atl-sesso">
+          <option value="">—</option>
+          <option value="M">M</option>
+          <option value="F">F</option>
+        </select>
       </div>
     </div>
     <!-- Riga: Data nascita + Luogo nascita + Codice fiscale -->
@@ -2378,15 +2386,12 @@ function renderAtleti(lista) {
   }
   document.getElementById('vuoto-atleti').style.display = 'none';
 
-  const stati = { tesserato: 'chip-verde', in_corso: 'chip-giallo', non_tesserato: 'chip-rosso', sospeso: 'chip-grigio' };
-  const nomiStati = { tesserato: 'Tesserato', in_corso: 'In corso', non_tesserato: 'Non tesserato', sospeso: 'Sospeso' };
-
   div.innerHTML = lista.map(a => `
     <div class="atleta-card">
       <div class="atleta-avatar">${(a.nome||'?')[0]}${(a.cognome||'')[0]}</div>
       <div class="atleta-info">
         <div class="atleta-nome">${a.maglia ? "<span style='font-size:12px;font-weight:700;color:var(--arancio);margin-right:6px;'>#"+a.maglia+"</span>" : ""}${a.cognome} ${a.nome}</div>
-        <div class="atleta-meta">${a.squadra || '—'} · ${a.ruolo || '—'} · <span class="chip ${stati[a.stato_tess]||'chip-grigio'}">${nomiStati[a.stato_tess]||'—'}</span></div>
+        <div class="atleta-meta">${a.squadra || '—'} · ${a.ruolo || '—'}</div>
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
       </div>
       <div class="atleta-azioni">
@@ -2407,27 +2412,27 @@ function apriModalAtleta(id) {
     const a = atletiInMemoria.find(x => x.id === id);
     if (!a) return;
     document.getElementById('modal-atleta-titolo').textContent = 'Modifica atleta';
-    document.getElementById('atl-maglia').value = a.maglia || '';
-    document.getElementById('atl-sesso').value = a.sesso || '';
-    document.getElementById('atl-nome').value = a.nome || '';
-    document.getElementById('atl-cognome').value = a.cognome || '';
-    document.getElementById('atl-nascita').value = a.nascita || '';
-    document.getElementById('atl-squadra').value = a.squadra || '';
-    document.getElementById('atl-ruolo').value = a.ruolo || '';
-    document.getElementById('atl-fipav').value = a.fipav || '';
-
-    document.getElementById('atl-cert').value = a.cert || '';
-    document.getElementById('atl-telefono').value = a.telefono || '';
-    document.getElementById('atl-email').value = a.email || '';
-    document.getElementById('atl-cf').value = a.cf || '';
-    document.getElementById('atl-luogo-nascita').value = a.luogo_nascita || '';
-    document.getElementById('atl-altezza').value = a.altezza || '';
-    document.getElementById('atl-peso').value = a.peso || '';
-    document.getElementById('atl-via').value = a.via || '';
-    document.getElementById('atl-cap').value = a.cap || '';
-    document.getElementById('atl-citta').value = a.citta || '';
-    document.getElementById('atl-pr').value = a.pr || '';
-    document.getElementById('atl-note').value = a.note || '';
+    const gSet = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+    gSet('atl-maglia', a.maglia);
+    gSet('atl-sesso', a.sesso);
+    gSet('atl-nome', a.nome);
+    gSet('atl-cognome', a.cognome);
+    gSet('atl-nascita', a.nascita);
+    gSet('atl-squadra', a.squadra);
+    gSet('atl-ruolo', a.ruolo);
+    gSet('atl-fipav', a.fipav);
+    gSet('atl-cert', a.cert);
+    gSet('atl-telefono', a.telefono);
+    gSet('atl-email', a.email);
+    gSet('atl-cf', a.cf);
+    gSet('atl-luogo-nascita', a.luogo_nascita);
+    gSet('atl-altezza', a.altezza);
+    gSet('atl-peso', a.peso);
+    gSet('atl-via', a.via);
+    gSet('atl-cap', a.cap);
+    gSet('atl-citta', a.citta);
+    gSet('atl-pr', a.pr);
+    gSet('atl-note', a.note);
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
     ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
