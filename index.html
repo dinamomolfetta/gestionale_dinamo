@@ -1149,9 +1149,13 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <div class="kpi-val" id="kpi-atleti-tot">0</div>
           <div class="kpi-lab">Atleti totali</div>
         </div>
-        <div class="kpi verde">
-          <div class="kpi-val" id="kpi-atleti-tesserati">0</div>
-          <div class="kpi-lab">Tesserati</div>
+        <div class="kpi" style="border-left-color:#2980b9;">
+          <div class="kpi-val" id="kpi-atleti-uomini">0</div>
+          <div class="kpi-lab">Uomini</div>
+        </div>
+        <div class="kpi" style="border-left-color:#e91e8c;">
+          <div class="kpi-val" id="kpi-atleti-donne">0</div>
+          <div class="kpi-lab">Donne</div>
         </div>
         <div class="kpi giallo" style="border-left-color:var(--giallo)">
           <div class="kpi-val" id="kpi-cert-scad">0</div>
@@ -2314,7 +2318,7 @@ function aggiornaSelectSquadre() {
     sel.innerHTML = extra + [...new Set([...sq, ...squadreAttive])].map(s => `<option>${s}</option>`).join('');
     if (corrente) sel.value = corrente;
   });
-  document.getElementById('kpi-squadre').textContent = new Set(atletiInMemoria.map(a => a.squadra).filter(Boolean)).size;
+  document.getElementById('kpi-squadre').textContent = new Set(baseKpi.map(a => (a.stagioni||[]).find(s => s.stagione === filtroStagioneAtleti)?.squadra || a.squadra).filter(Boolean)).size;
 }
 
 function aggiornaSelectSquadreSessione() {
@@ -2352,13 +2356,20 @@ function renderAtleti(lista) {
   if (!lista) lista = atletiInMemoria;
   const div = document.getElementById('lista-atleti');
   const pEdit = ['admin','editor'].includes(ruoloCorrente);
-  document.getElementById('kpi-atleti-tot').textContent = atletiInMemoria.length;
+
+  // KPI calcolati sulla lista filtrata (per stagione se attiva)
+  const baseKpi = filtroStagioneAtleti
+    ? atletiInMemoria.filter(a => (a.stagioni||[]).some(s => s.stagione === filtroStagioneAtleti))
+    : atletiInMemoria;
+
+  document.getElementById('kpi-atleti-tot').textContent = baseKpi.length;
+  document.getElementById('kpi-atleti-uomini').textContent = baseKpi.filter(a => a.sesso === 'M').length;
+  document.getElementById('kpi-atleti-donne').textContent = baseKpi.filter(a => a.sesso === 'F').length;
   const homeNum = document.getElementById('home-num-atleti');
   if (homeNum) homeNum.textContent = atletiInMemoria.length;
-  document.getElementById('kpi-atleti-tesserati').textContent = atletiInMemoria.filter(a => a.stato_tess === 'tesserato').length;
   const oggi = new Date().toISOString().split('T')[0];
   const tra30 = new Date(); tra30.setDate(tra30.getDate() + 30);
-  document.getElementById('kpi-cert-scad').textContent = atletiInMemoria.filter(a => a.cert && a.cert <= tra30.toISOString().split('T')[0]).length;
+  document.getElementById('kpi-cert-scad').textContent = baseKpi.filter(a => a.cert && a.cert <= tra30.toISOString().split('T')[0]).length;
 
   if (!lista.length) {
     div.innerHTML = '';
@@ -2397,6 +2408,7 @@ function apriModalAtleta(id) {
     if (!a) return;
     document.getElementById('modal-atleta-titolo').textContent = 'Modifica atleta';
     document.getElementById('atl-maglia').value = a.maglia || '';
+    document.getElementById('atl-sesso').value = a.sesso || '';
     document.getElementById('atl-nome').value = a.nome || '';
     document.getElementById('atl-cognome').value = a.cognome || '';
     document.getElementById('atl-nascita').value = a.nascita || '';
@@ -2419,6 +2431,7 @@ function apriModalAtleta(id) {
   } else {
     document.getElementById('modal-atleta-titolo').textContent = 'Nuovo atleta';
     ['atl-maglia','atl-nome','atl-cognome','atl-nascita','atl-luogo-nascita','atl-cf','atl-fipav','atl-altezza','atl-peso','atl-email','atl-cert','atl-telefono','atl-via','atl-cap','atl-citta','atl-pr','atl-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const sessoEl = document.getElementById('atl-sesso'); if(sessoEl) sessoEl.value = '';
     document.getElementById('atl-ruolo').value = '';
     document.getElementById('atl-squadra').value = '';
   }
@@ -2445,6 +2458,7 @@ async function salvaAtleta() {
   const g = id => document.getElementById(id);
   const dati = {
     nome, cognome,
+    sesso:          g('atl-sesso')?.value || '',
     nascita:        g('atl-nascita')?.value || '',
     squadra:        g('atl-squadra')?.value || '',
     maglia:         g('atl-maglia')?.value ? parseInt(g('atl-maglia').value) : null,
