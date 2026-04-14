@@ -1217,6 +1217,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <option value="tutti">Tutte le squadre</option>
         </select>
         <button class="btn btn-secondario" id="btn-ordina-cognome" onclick="toggleOrdineCognome(this)">A↓ Ordina per cognome</button>
+        <button class="btn btn-secondario" onclick="apriAssegnaStagione()">⚡ Assegna stagione</button>
         <button class="btn btn-primario" id="btn-nuovo-atleta" onclick="apriModalAtleta()">➕ Nuovo atleta</button>
         <button class="btn btn-secondario" id="btn-nuovo-staff" onclick="apriModalStaff()">👔 Nuovo staff</button>
         <label style="cursor:pointer;">
@@ -1775,6 +1776,93 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 <div id="badge-salvataggio">✅ Salvato</div>
 
 
+
+
+<!-- MODAL ASSEGNA STAGIONE RAPIDA -->
+<div class="modal-overlay" id="modal-assegna-stagione">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-titolo">
+      <span>⚡ Assegna stagione rapida</span>
+      <button class="modal-chiudi" onclick="chiudiAssegnaStagione()">×</button>
+    </div>
+
+    <!-- Dati stagione da assegnare -->
+    <div style="background:var(--blu-l);border-radius:var(--raggio);padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:10px;">Dati da assegnare</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 0.5fr 1fr;gap:10px;">
+        <div class="campo-gruppo">
+          <label>Stagione</label>
+          <select class="campo" id="ass-stagione">
+            <option value="2017/2018">2017/2018</option>
+            <option value="2018/2019">2018/2019</option>
+            <option value="2019/2020">2019/2020</option>
+            <option value="2020/2021">2020/2021</option>
+            <option value="2021/2022">2021/2022</option>
+            <option value="2022/2023">2022/2023</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2025/2026" selected>2025/2026</option>
+            <option value="2026/2027">2026/2027</option>
+          </select>
+        </div>
+        <div class="campo-gruppo">
+          <label>Squadra</label>
+          <select class="campo" id="ass-squadra">
+            <option value="">— nessuna —</option>
+          </select>
+        </div>
+        <div class="campo-gruppo">
+          <label>N° maglia</label>
+          <input type="number" class="campo" id="ass-maglia" placeholder="—" min="1" max="99">
+        </div>
+        <div class="campo-gruppo">
+          <label>Ruolo</label>
+          <select class="campo" id="ass-ruolo">
+            <option value="">— nessuno —</option>
+            <option>Palleggiatore</option>
+            <option>Schiacciatore</option>
+            <option>Opposto</option>
+            <option>Centrale</option>
+            <option>Libero</option>
+            <option>Ricevitore</option>
+            <option>Allenatore</option>
+            <option>Dirigente Acc.</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--testo-m);margin-top:8px;">💡 Maglia e ruolo sono opzionali — puoi lasciarli vuoti e completarli dopo singolarmente.</div>
+    </div>
+
+    <!-- Selezione atleti -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--testo-m);text-transform:uppercase;">Seleziona atleti</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondario btn-piccolo" onclick="selezionaTutti()">Seleziona tutti</button>
+        <button class="btn btn-secondario btn-piccolo" onclick="deselezionaTutti()">Deseleziona tutti</button>
+      </div>
+    </div>
+
+    <div style="max-height:320px;overflow-y:auto;border:0.5px solid var(--grigio-m);border-radius:var(--raggio);">
+      <div id="ass-lista-atleti" style="padding:8px;display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div id="ass-counter" style="font-size:13px;color:var(--testo-m);">0 atleti selezionati</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondario" onclick="chiudiAssegnaStagione()">Annulla</button>
+        <button class="btn btn-primario" onclick="eseguiAssegnaStagione()">⚡ Assegna a selezionati</button>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div id="ass-progress" style="display:none;margin-top:12px;">
+      <div style="font-size:13px;color:var(--testo-m);margin-bottom:6px;" id="ass-progress-label">Assegnazione in corso...</div>
+      <div style="background:var(--grigio-m);border-radius:10px;height:8px;overflow:hidden;">
+        <div id="ass-progress-bar" style="background:var(--arancio);height:100%;width:0%;transition:width 0.3s;"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL IMPORTA EXCEL ATLETI -->
 <div class="modal-overlay" id="modal-import-excel">
@@ -3955,6 +4043,109 @@ async function eseguiImportAtleti() {
 function chiudiImportExcel() {
   document.getElementById('modal-import-excel').classList.remove('aperto');
   atletiDaImportare = [];
+}
+
+
+// ============================================================
+// ASSEGNA STAGIONE RAPIDA
+// ============================================================
+function apriAssegnaStagione() {
+  // Popola select squadre
+  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  const selSq = document.getElementById('ass-squadra');
+  selSq.innerHTML = '<option value="">— nessuna —</option>' + sq.map(s => `<option>${s}</option>`).join('');
+
+  // Preimposta stagione corrente
+  const selStag = document.getElementById('ass-stagione');
+  if (selStag) selStag.value = stagioneSel || '2025/2026';
+
+  // Popola lista atleti ordinati per cognome
+  const lista = [...atletiInMemoria].sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+  const div = document.getElementById('ass-lista-atleti');
+  div.innerHTML = lista.map(a => {
+    const stagioni = (a.stagioni||[]).map(s => s.stagione).join(', ') || 'Nessuna stagione';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;hover:background:var(--grigio-s);">
+      <input type="checkbox" class="ass-check" value="${a.id}" style="accent-color:var(--arancio);" onchange="aggiornaContatore()">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${a.cognome} ${a.nome}</div>
+        <div style="font-size:11px;color:var(--grigio-t);">${stagioni}</div>
+      </div>
+    </label>`;
+  }).join('');
+
+  aggiornaContatore();
+  document.getElementById('ass-progress').style.display = 'none';
+  document.getElementById('modal-assegna-stagione').classList.add('aperto');
+}
+
+function chiudiAssegnaStagione() {
+  document.getElementById('modal-assegna-stagione').classList.remove('aperto');
+}
+
+function selezionaTutti() {
+  document.querySelectorAll('.ass-check').forEach(cb => cb.checked = true);
+  aggiornaContatore();
+}
+
+function deselezionaTutti() {
+  document.querySelectorAll('.ass-check').forEach(cb => cb.checked = false);
+  aggiornaContatore();
+}
+
+function aggiornaContatore() {
+  const n = document.querySelectorAll('.ass-check:checked').length;
+  document.getElementById('ass-counter').textContent = `${n} atleti selezionati`;
+}
+
+async function eseguiAssegnaStagione() {
+  const stagione = document.getElementById('ass-stagione').value;
+  const squadra  = document.getElementById('ass-squadra').value;
+  const maglia   = document.getElementById('ass-maglia').value ? parseInt(document.getElementById('ass-maglia').value) : null;
+  const ruolo    = document.getElementById('ass-ruolo').value;
+
+  const selezionati = [...document.querySelectorAll('.ass-check:checked')].map(cb => cb.value);
+  if (!selezionati.length) { alert('Seleziona almeno un atleta.'); return; }
+  if (!stagione) { alert('Seleziona una stagione.'); return; }
+
+  const progress = document.getElementById('ass-progress');
+  const bar = document.getElementById('ass-progress-bar');
+  const lbl = document.getElementById('ass-progress-label');
+  progress.style.display = '';
+
+  let ok = 0;
+  for (let i = 0; i < selezionati.length; i++) {
+    const id = selezionati[i];
+    const atleta = atletiInMemoria.find(a => a.id === id);
+    if (!atleta) continue;
+
+    // Aggiungi stagione se non già presente
+    const stagioni = atleta.stagioni || [];
+    const esistente = stagioni.findIndex(s => s.stagione === stagione);
+    const nuovaStagione = { stagione, squadra, ruolo };
+    if (maglia) nuovaStagione.maglia = maglia;
+
+    let nuoveStagioni;
+    if (esistente >= 0) {
+      // Aggiorna stagione esistente solo se non ha già maglia/ruolo/squadra
+      nuoveStagioni = stagioni.map((s, idx) => idx === esistente ? { ...s, ...nuovaStagione } : s);
+    } else {
+      nuoveStagioni = [...stagioni, nuovaStagione];
+    }
+
+    try {
+      await db.collection('atleti_dinamo').doc(id).update({ stagioni: nuoveStagioni });
+      ok++;
+    } catch(e) {
+      console.error('Errore atleta', id, e);
+    }
+
+    bar.style.width = Math.round((i+1)/selezionati.length*100) + '%';
+    lbl.textContent = `Assegnati ${i+1} di ${selezionati.length}...`;
+  }
+
+  lbl.textContent = `✅ Completato! ${ok} atleti aggiornati.`;
+  bar.style.background = 'var(--verde)';
+  setTimeout(() => chiudiAssegnaStagione(), 2000);
 }
 
 </script>
