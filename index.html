@@ -1778,6 +1778,83 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
 
 
+
+<!-- MODAL DOCUMENTI ATLETA -->
+<div class="modal-overlay" id="modal-documenti">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-titolo">
+      <span id="modal-docs-titolo">📄 Documenti</span>
+      <button class="modal-chiudi" onclick="chiudiDocumenti()">×</button>
+    </div>
+
+    <!-- Sezione Documento identità -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Documento di identità</div>
+      <div class="griglia-2" style="margin-bottom:10px;">
+        <div class="campo-gruppo">
+          <label>Tipo documento</label>
+          <select class="campo" id="doc-tipo">
+            <option value="">— seleziona —</option>
+            <option value="carta_identita">Carta d'identità</option>
+            <option value="patente">Patente di guida</option>
+            <option value="passaporto">Passaporto</option>
+          </select>
+        </div>
+        <div class="campo-gruppo">
+          <label>Scadenza documento</label>
+          <input type="date" class="campo" id="doc-scadenza">
+        </div>
+      </div>
+      <div id="doc-attuale" style="display:none;margin-bottom:10px;padding:10px;background:var(--grigio-s);border-radius:var(--raggio);display:flex;align-items:center;gap:10px;">
+        <span id="doc-attuale-nome" style="flex:1;font-size:13px;"></span>
+        <a id="doc-attuale-link" href="#" target="_blank" class="btn btn-secondario btn-piccolo">⬇️ Scarica</a>
+        <button class="btn btn-pericolo btn-piccolo" onclick="eliminaDocumento('doc')">🗑️</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="cursor:pointer;flex:1;">
+          <input type="file" id="input-doc-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadDocumento(this,'doc')">
+          <span class="btn btn-secondario" style="width:100%;justify-content:center;" onclick="document.getElementById('input-doc-file').click()">📎 Carica documento</span>
+        </label>
+        <button class="btn btn-primario btn-piccolo" onclick="salvaMetaDocumento('doc')">💾 Salva</button>
+      </div>
+      <div id="upload-doc-progress" style="display:none;margin-top:8px;">
+        <div style="background:var(--grigio-m);border-radius:10px;height:6px;overflow:hidden;">
+          <div id="upload-doc-bar" style="background:var(--arancio);height:100%;width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="upload-doc-label" style="font-size:12px;color:var(--testo-m);margin-top:4px;">Caricamento...</div>
+      </div>
+    </div>
+
+    <!-- Sezione Certificato medico -->
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Certificato medico</div>
+      <div class="campo-gruppo" style="margin-bottom:10px;max-width:220px;">
+        <label>Scadenza certificato</label>
+        <input type="date" class="campo" id="cert-scadenza-doc">
+      </div>
+      <div id="cert-attuale" style="display:none;margin-bottom:10px;padding:10px;background:var(--grigio-s);border-radius:var(--raggio);display:flex;align-items:center;gap:10px;">
+        <span id="cert-attuale-nome" style="flex:1;font-size:13px;"></span>
+        <a id="cert-attuale-link" href="#" target="_blank" class="btn btn-secondario btn-piccolo">⬇️ Scarica</a>
+        <button class="btn btn-pericolo btn-piccolo" onclick="eliminaDocumento('cert')">🗑️</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="cursor:pointer;flex:1;">
+          <input type="file" id="input-cert-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadDocumento(this,'cert')">
+          <span class="btn btn-secondario" style="width:100%;justify-content:center;" onclick="document.getElementById('input-cert-file').click()">📎 Carica certificato</span>
+        </label>
+        <button class="btn btn-primario btn-piccolo" onclick="salvaMetaDocumento('cert')">💾 Salva</button>
+      </div>
+      <div id="upload-cert-progress" style="display:none;margin-top:8px;">
+        <div style="background:var(--grigio-m);border-radius:10px;height:6px;overflow:hidden;">
+          <div id="upload-cert-bar" style="background:var(--arancio);height:100%;width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="upload-cert-label" style="font-size:12px;color:var(--testo-m);margin-top:4px;">Caricamento...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- MODAL ASSEGNA STAGIONE RAPIDA -->
 <div class="modal-overlay" id="modal-assegna-stagione">
   <div class="modal" style="max-width:680px;">
@@ -2150,6 +2227,8 @@ const db   = firebase.firestore();
 // STATO GLOBALE
 // ============================================================
 const STAGIONE = "2025/2026";
+const CLOUDINARY_CLOUD = "dq6dvdkiz";
+const CLOUDINARY_PRESET = "gestionale_dinamo";
 let utenteCorrente = null;
 let ruoloCorrente  = null;
 let movimentiInMemoria = [];
@@ -2610,10 +2689,16 @@ function renderAtleti(lista) {
         </div>
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
       </div>
-      <div class="atleta-azioni">
-        <button class="btn btn-secondario btn-piccolo" onclick="visualizzaAtleta('${a.id}')">👁️</button>
-        ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : ''}
-        ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaAtleta('${a.id}')">🗑️</button>` : ''}
+      <div class="atleta-azioni" style="flex-direction:column;gap:4px;align-items:flex-end;">
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-secondario btn-piccolo" onclick="visualizzaAtleta('${a.id}')">👁️</button>
+          ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : ''}
+          ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaAtleta('${a.id}')">🗑️</button>` : ''}
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-piccolo" style="background:var(--blu-l);color:var(--blu);border:none;" onclick="apriDocumenti('${a.id}')">📄 Documenti</button>
+          ${(() => { const cert = a.cert; const oggi2 = new Date().toISOString().split('T')[0]; const tra30 = new Date(); tra30.setDate(tra30.getDate()+30); const t30 = tra30.toISOString().split('T')[0]; const col = !cert ? 'var(--grigio-m)' : cert < oggi2 ? 'var(--rosso)' : cert <= t30 ? 'var(--giallo)' : 'var(--verde)'; const tc = !cert ? 'var(--testo-m)' : cert < oggi2 ? '#fff' : cert <= t30 ? '#7a5a00' : '#fff'; return `<button class="btn btn-piccolo" style="background:${col};color:${tc};border:none;" onclick="apriCertificato('${a.id}')">${cert ? '🏥 ' + formatData(cert) : '🏥 Nessun cert.'}</button>`; })()}
+        </div>
       </div>
     </div>
   `).join('');
@@ -4146,6 +4231,140 @@ async function eseguiAssegnaStagione() {
   lbl.textContent = `✅ Completato! ${ok} atleti aggiornati.`;
   bar.style.background = 'var(--verde)';
   setTimeout(() => chiudiAssegnaStagione(), 2000);
+}
+
+
+// ============================================================
+// DOCUMENTI ATLETA — CLOUDINARY
+// ============================================================
+let atletaDocsId = null;
+
+function apriDocumenti(id) {
+  atletaDocsId = id;
+  const a = atletiInMemoria.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('modal-docs-titolo').textContent = `📄 Documenti — ${a.cognome} ${a.nome}`;
+
+  // Documento identità
+  const docTipo = document.getElementById('doc-tipo');
+  const docScad = document.getElementById('doc-scadenza');
+  docTipo.value = a.doc_tipo || '';
+  docScad.value = a.doc_scadenza || '';
+  mostraFileAttuale('doc', a.doc_url, a.doc_nome);
+
+  // Certificato medico
+  document.getElementById('cert-scadenza-doc').value = a.cert || '';
+  mostraFileAttuale('cert', a.cert_url, a.cert_nome);
+
+  // Reset progress
+  ['doc','cert'].forEach(t => {
+    document.getElementById(`upload-${t}-progress`).style.display = 'none';
+    document.getElementById(`upload-${t}-bar`).style.width = '0%';
+  });
+
+  document.getElementById('modal-documenti').classList.add('aperto');
+}
+
+function apriCertificato(id) {
+  apriDocumenti(id);
+}
+
+function chiudiDocumenti() {
+  document.getElementById('modal-documenti').classList.remove('aperto');
+  atletaDocsId = null;
+}
+
+function mostraFileAttuale(tipo, url, nome) {
+  const box = document.getElementById(`${tipo}-attuale`);
+  const nomeEl = document.getElementById(`${tipo}-attuale-nome`);
+  const linkEl = document.getElementById(`${tipo}-attuale-link`);
+  if (url) {
+    box.style.display = 'flex';
+    nomeEl.textContent = nome || 'File caricato';
+    linkEl.href = url;
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+async function uploadDocumento(input, tipo) {
+  const file = input.files[0];
+  if (!file || !atletaDocsId) return;
+  input.value = '';
+
+  const progress = document.getElementById(`upload-${tipo}-progress`);
+  const bar = document.getElementById(`upload-${tipo}-bar`);
+  const lbl = document.getElementById(`upload-${tipo}-label`);
+  progress.style.display = '';
+  bar.style.width = '10%';
+  lbl.textContent = 'Caricamento in corso...';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append('folder', `gestionale_dinamo/${atletaDocsId}`);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    bar.style.width = '100%';
+    bar.style.background = 'var(--verde)';
+    lbl.textContent = '✅ Caricato!';
+
+    // Salva URL su Firestore
+    const update = {};
+    if (tipo === 'doc') {
+      update.doc_url = data.secure_url;
+      update.doc_nome = file.name;
+      update.doc_tipo = document.getElementById('doc-tipo').value;
+      update.doc_scadenza = document.getElementById('doc-scadenza').value;
+    } else {
+      update.cert_url = data.secure_url;
+      update.cert_nome = file.name;
+      update.cert = document.getElementById('cert-scadenza-doc').value;
+    }
+    await db.collection('atleti_dinamo').doc(atletaDocsId).update(update);
+    mostraBadge();
+
+    // Aggiorna visualizzazione
+    const a = atletiInMemoria.find(x => x.id === atletaDocsId);
+    if (a) {
+      Object.assign(a, update);
+      mostraFileAttuale(tipo, data.secure_url, file.name);
+    }
+  } catch(e) {
+    lbl.textContent = '❌ Errore nel caricamento';
+    console.error(e);
+  }
+}
+
+async function salvaMetaDocumento(tipo) {
+  if (!atletaDocsId) return;
+  const update = {};
+  if (tipo === 'doc') {
+    update.doc_tipo = document.getElementById('doc-tipo').value;
+    update.doc_scadenza = document.getElementById('doc-scadenza').value;
+  } else {
+    update.cert = document.getElementById('cert-scadenza-doc').value;
+  }
+  await db.collection('atleti_dinamo').doc(atletaDocsId).update(update);
+  mostraBadge();
+}
+
+async function eliminaDocumento(tipo) {
+  if (!atletaDocsId || !confirm('Eliminare questo documento?')) return;
+  const update = {};
+  if (tipo === 'doc') {
+    update.doc_url = ''; update.doc_nome = ''; update.doc_tipo = ''; update.doc_scadenza = '';
+  } else {
+    update.cert_url = ''; update.cert_nome = '';
+  }
+  await db.collection('atleti_dinamo').doc(atletaDocsId).update(update);
+  mostraFileAttuale(tipo, '', '');
+  mostraBadge();
 }
 
 </script>
