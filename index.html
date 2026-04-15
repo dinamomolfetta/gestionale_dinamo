@@ -1474,27 +1474,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </div>
       </div>
 
-      <!-- Rosa ufficiale -->
-      <div class="card">
-        <div class="card-titolo"><span class="icona">👕</span> Rosa ufficiale</div>
-        <div class="tabella-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Giocatore</th>
-                <th>Ruolo</th>
-                <th id="rosa-stagioni-headers"></th>
-                <th>Totale presenze</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-rosa"></tbody>
-          </table>
-          <div class="stato-vuoto" id="vuoto-rosa" style="display:none;">
-            <div class="icona-grande">👕</div>
-            <p>Nessun atleta registrato</p>
-          </div>
-        </div>
-      </div>
+
 
     </section>
 
@@ -3134,7 +3114,7 @@ function renderTabellaPartite(partite) {
   // Raggruppa per squadra, poi ordina per data dentro ogni gruppo
   const perSquadra = {};
   partite.forEach(p => {
-    const sq = p.squadra || '—';
+    const sq = p.squadra || p.competizione || '—';
     if (!perSquadra[sq]) perSquadra[sq] = [];
     perSquadra[sq].push(p);
   });
