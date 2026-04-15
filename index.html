@@ -2007,6 +2007,51 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
   </div>
 </div>
 
+
+<!-- MODAL DOCUMENTI STAFF -->
+<div class="modal-overlay" id="modal-documenti-staff">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-titolo">
+      <span id="modal-docs-staff-titolo">📄 Documenti staff</span>
+      <button class="modal-chiudi" onclick="chiudiDocumentiStaff()">×</button>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--arancio);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;border-bottom:1px solid var(--grigio-m);padding-bottom:4px;">Documento di identità</div>
+    <div class="griglia-2" style="margin-bottom:10px;">
+      <div class="campo-gruppo">
+        <label>Tipo documento</label>
+        <select class="campo" id="stf-doc-tipo">
+          <option value="">— seleziona —</option>
+          <option value="carta_identita">Carta d'identità</option>
+          <option value="patente">Patente di guida</option>
+          <option value="passaporto">Passaporto</option>
+        </select>
+      </div>
+      <div class="campo-gruppo">
+        <label>Numero documento</label>
+        <input type="text" class="campo" id="stf-doc-numero" placeholder="Es. CA00000AA">
+      </div>
+    </div>
+    <div id="stf-doc-attuale" style="display:none;margin-bottom:10px;padding:10px;background:var(--grigio-s);border-radius:var(--raggio);display:flex;align-items:center;gap:10px;">
+      <span id="stf-doc-attuale-nome" style="flex:1;font-size:13px;"></span>
+      <a id="stf-doc-attuale-link" href="#" target="_blank" class="btn btn-secondario btn-piccolo">⬇️ Scarica</a>
+      <button class="btn btn-pericolo btn-piccolo" onclick="eliminaDocumentoStaff()">🗑️</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <label style="cursor:pointer;flex:1;">
+        <input type="file" id="input-stf-doc-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadDocumentoStaff(this)">
+        <span class="btn btn-secondario" style="width:100%;justify-content:center;" onclick="document.getElementById('input-stf-doc-file').click()">📎 Carica documento</span>
+      </label>
+      <button class="btn btn-primario btn-piccolo" onclick="salvaMetaDocumentoStaff()">💾 Salva</button>
+    </div>
+    <div id="upload-stf-progress" style="display:none;margin-top:8px;">
+      <div style="background:var(--grigio-m);border-radius:10px;height:6px;overflow:hidden;">
+        <div id="upload-stf-bar" style="background:var(--arancio);height:100%;width:0%;transition:width 0.3s;"></div>
+      </div>
+      <div id="upload-stf-label" style="font-size:12px;color:var(--testo-m);margin-top:4px;">Caricamento...</div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL STAFF -->
 <div class="modal-overlay" id="modal-staff">
   <div class="modal" style="max-width:580px;">
@@ -2093,6 +2138,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <label>Note</label>
       <input type="text" class="campo" id="stf-note" placeholder="Note libere">
     </div>
+
+    <!-- Stagioni staff -->
+    <div style="margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label style="font-size:12px;font-weight:600;color:var(--testo-m);text-transform:uppercase;letter-spacing:0.4px;">Stagioni</label>
+        <button class="btn btn-secondario btn-piccolo" type="button" onclick="aggiungiRigaStagioneStaff()">➕ Aggiungi stagione</button>
+      </div>
+      <div id="stagioni-staff-lista"></div>
+    </div>
+
     <div class="modal-azioni">
       <button class="btn btn-secondario" onclick="chiudiModalStaff()">Annulla</button>
       <button class="btn btn-primario" onclick="salvaStaff()">💾 Salva</button>
@@ -3818,10 +3873,13 @@ function renderStaff() {
           ${s.fipav ? '<span style="font-size:12px;color:var(--grigio-t);margin-left:6px;">Fipav: '+s.fipav+'</span>' : ''}
         </div>
       </div>
-      <div class="atleta-azioni">
-        <button class="btn btn-secondario btn-piccolo" onclick="visualizzaStaff('${s.id}')">👁️</button>
-        ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalStaff('${s.id}')">✏️</button>` : ''}
-        ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaStaff('${s.id}')">🗑️</button>` : ''}
+      <div class="atleta-azioni" style="flex-direction:column;gap:4px;align-items:flex-end;">
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-secondario btn-piccolo" onclick="visualizzaStaff('${s.id}')">👁️</button>
+          ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalStaff('${s.id}')">✏️</button>` : ''}
+          ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaStaff('${s.id}')">🗑️</button>` : ''}
+        </div>
+        <button class="btn btn-piccolo" style="background:var(--blu-l);color:var(--blu);border:none;" onclick="apriDocumentiStaff('${s.id}')">📄 Documenti</button>
       </div>
     </div>
   `).join('');
@@ -3834,6 +3892,7 @@ function apriModalStaff(id) {
     const s = staffInMemoria.find(x => x.id === id);
     if (!s) return;
     document.getElementById('modal-staff-titolo').textContent = 'Modifica staff';
+    stagioniStaffTemp = s.stagioni ? JSON.parse(JSON.stringify(s.stagioni)) : [];
     document.getElementById('stf-nome').value = s.nome || '';
     document.getElementById('stf-cognome').value = s.cognome || '';
     document.getElementById('stf-nascita').value = s.nascita || '';
@@ -3852,7 +3911,9 @@ function apriModalStaff(id) {
     document.getElementById('modal-staff-titolo').textContent = 'Nuovo membro staff';
     campi.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('stf-ruolo').value = '';
+    stagioniStaffTemp = [];
   }
+  renderStagioniStaff(stagioniStaffTemp);
   document.getElementById('modal-staff').classList.add('aperto');
 }
 
@@ -3881,6 +3942,7 @@ async function salvaStaff() {
     telefono:      g('stf-telefono')?.value?.trim() || '',
     email:         g('stf-email')?.value?.trim() || '',
     note:          g('stf-note')?.value?.trim() || '',
+    stagioni:      stagioniStaffTemp,
     stagione:      stagioneSel || STAGIONE,
     aggiornato:    firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -4500,6 +4562,129 @@ async function aggiornaSqPartitiInBlocco() {
     status.style.color = 'var(--rosso)';
     status.textContent = '❌ Errore: ' + e.message;
   }
+}
+
+
+// ============================================================
+// STAGIONI STAFF
+// ============================================================
+let stagioniStaffTemp = [];
+
+function renderStagioniStaff(stagioni) {
+  const div = document.getElementById('stagioni-staff-lista');
+  if (!div) return;
+  div.innerHTML = `
+    <div class="stagione-atleta-header">
+      <span>Stagione</span><span>Ruolo</span><span>Squadra</span><span></span>
+    </div>
+    ${(stagioni||[]).map((s,i) => `
+      <div class="stagione-atleta-riga" data-idx="${i}">
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneStaff(${i},'stagione',this.value)">
+          ${STAGIONI_LIST.map(st => `<option value="${st}" ${s.stagione===st?'selected':''}>${st}</option>`).join('')}
+        </select>
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneStaff(${i},'ruolo',this.value)">
+          <option value="">—</option>
+          <option value="Allenatore" ${s.ruolo==='Allenatore'?'selected':''}>Allenatore</option>
+          <option value="Dirigente Acc." ${s.ruolo==='Dirigente Acc.'?'selected':''}>Dirigente Acc.</option>
+        </select>
+        <select class="campo" style="font-size:13px;padding:6px 8px;" onchange="aggiornaStagioneStaff(${i},'squadra',this.value)">
+          <option value="">—</option>
+          ${[...new Set([...atletiInMemoria.map(a=>a.squadra).filter(Boolean),...squadreAttive])].map(sq=>`<option value="${sq}" ${s.squadra===sq?'selected':''}>${sq}</option>`).join('')}
+        </select>
+        <button class="btn btn-pericolo btn-piccolo" onclick="rimuoviStagioneStaff(${i})">✕</button>
+      </div>`).join('')}
+    ${!(stagioni||[]).length ? '<p style="font-size:13px;color:var(--grigio-t);padding:8px 0;">Nessuna stagione.</p>' : ''}
+  `;
+}
+
+function aggiungiRigaStagioneStaff() {
+  stagioniStaffTemp.push({ stagione: stagioneSel||'2025/2026', ruolo: '', squadra: '' });
+  renderStagioniStaff(stagioniStaffTemp);
+}
+
+function aggiornaStagioneStaff(idx, campo, valore) {
+  if (stagioniStaffTemp[idx]) stagioniStaffTemp[idx][campo] = valore;
+}
+
+function rimuoviStagioneStaff(idx) {
+  stagioniStaffTemp.splice(idx, 1);
+  renderStagioniStaff(stagioniStaffTemp);
+}
+
+// ============================================================
+// DOCUMENTI STAFF
+// ============================================================
+let staffDocsId = null;
+
+function apriDocumentiStaff(id) {
+  staffDocsId = id;
+  const s = staffInMemoria.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-docs-staff-titolo').textContent = `📄 Documenti — ${s.cognome} ${s.nome}`;
+  document.getElementById('stf-doc-tipo').value = s.doc_tipo || '';
+  document.getElementById('stf-doc-numero').value = s.doc_numero || '';
+  const box = document.getElementById('stf-doc-attuale');
+  if (s.doc_url) {
+    box.style.display = 'flex';
+    document.getElementById('stf-doc-attuale-nome').textContent = s.doc_nome || 'File caricato';
+    document.getElementById('stf-doc-attuale-link').href = s.doc_url;
+  } else { box.style.display = 'none'; }
+  document.getElementById('upload-stf-progress').style.display = 'none';
+  document.getElementById('modal-documenti-staff').classList.add('aperto');
+}
+
+function chiudiDocumentiStaff() {
+  document.getElementById('modal-documenti-staff').classList.remove('aperto');
+  staffDocsId = null;
+}
+
+async function uploadDocumentoStaff(input) {
+  const file = input.files[0];
+  if (!file || !staffDocsId) return;
+  input.value = '';
+  const prog = document.getElementById('upload-stf-progress');
+  const bar  = document.getElementById('upload-stf-bar');
+  const lbl  = document.getElementById('upload-stf-label');
+  prog.style.display = '';
+  bar.style.width = '10%';
+  lbl.textContent = 'Caricamento...';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('folder', `gestionale_dinamo/staff/${staffDocsId}`);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, { method:'POST', body:fd });
+    const data = await res.json();
+    bar.style.width = '100%'; bar.style.background = 'var(--verde)';
+    lbl.textContent = '✅ Caricato!';
+    const update = { doc_url: data.secure_url, doc_nome: file.name,
+      doc_tipo: document.getElementById('stf-doc-tipo').value,
+      doc_numero: document.getElementById('stf-doc-numero').value };
+    await db.collection('staff_dinamo').doc(staffDocsId).update(update);
+    const s = staffInMemoria.find(x => x.id === staffDocsId);
+    if (s) Object.assign(s, update);
+    const box = document.getElementById('stf-doc-attuale');
+    box.style.display = 'flex';
+    document.getElementById('stf-doc-attuale-nome').textContent = file.name;
+    document.getElementById('stf-doc-attuale-link').href = data.secure_url;
+    mostraBadge();
+  } catch(e) { lbl.textContent = '❌ Errore'; console.error(e); }
+}
+
+async function salvaMetaDocumentoStaff() {
+  if (!staffDocsId) return;
+  await db.collection('staff_dinamo').doc(staffDocsId).update({
+    doc_tipo:   document.getElementById('stf-doc-tipo').value,
+    doc_numero: document.getElementById('stf-doc-numero').value
+  });
+  mostraBadge();
+}
+
+async function eliminaDocumentoStaff() {
+  if (!staffDocsId || !confirm('Eliminare questo documento?')) return;
+  await db.collection('staff_dinamo').doc(staffDocsId).update({ doc_url:'', doc_nome:'', doc_tipo:'', doc_numero:'' });
+  document.getElementById('stf-doc-attuale').style.display = 'none';
+  mostraBadge();
 }
 
 </script>
