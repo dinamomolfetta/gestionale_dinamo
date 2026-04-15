@@ -2239,6 +2239,7 @@ let squadreAttive = [];
 let atletaInModifica = null;
 let stagioneSel = STAGIONE;
 let partitiInMemoria = [];
+let tutteLePartite = [];
 let movimentoInModifica = null;
 let unsub = {};
 
@@ -2990,6 +2991,22 @@ function avviaListenerPartite() {
     .onSnapshot(snap => {
       partitiInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderStatistiche();
+    });
+}
+
+function avviaListenerTuttePartite() {
+  if (unsub.tuttePartite) unsub.tuttePartite();
+  unsub.tuttePartite = db.collection('partite_dinamo')
+    .orderBy('data','desc')
+    .onSnapshot(snap => {
+      tutteLePartite = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Aggiorna badge presenze in home
+      const badge = document.getElementById('home-num-presenze');
+      if (badge) {
+        const atleti = new Set();
+        tutteLePartite.forEach(p => (p.giocatori||[]).forEach(g => atleti.add(g.id)));
+        badge.textContent = atleti.size;
+      }
     });
 }
 
@@ -3884,14 +3901,14 @@ function renderHomePresenze() {
   const vuoto = document.getElementById('vuoto-home-presenze');
   const ordine = document.getElementById('pres-ordine')?.value || 'cognome';
 
-  // Raccogli tutte le stagioni dalle partite
-  const stagioni = [...new Set(partitiInMemoria.map(p => p.stagione).filter(Boolean))].sort();
+  // Usa tutte le partite (non filtrate per stagione)
+  const tuttePartite = tutteLePartite.length ? tutteLePartite : partitiInMemoria;
+  const stagioni = [...new Set(tuttePartite.map(p => p.stagione).filter(Boolean))].sort();
 
-  if (!partitiInMemoria.length) {
+  if (!tuttePartite.length) {
     vuoto.style.display = '';
     thead.innerHTML = '';
     tbody.innerHTML = '';
-    // Aggiorna badge
     document.getElementById('home-num-presenze').textContent = 0;
     return;
   }
@@ -3899,7 +3916,7 @@ function renderHomePresenze() {
 
   // Conta presenze per atleta per stagione
   const conteggio = {};
-  partitiInMemoria.forEach(p => {
+  tuttePartite.forEach(p => {
     (p.giocatori||[]).forEach(g => {
       if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome, stagioni: {} };
       const stag = p.stagione || '—';
