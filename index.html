@@ -1712,7 +1712,13 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </select>
       </div>
     </div>
-    <div class="griglia-2" style="margin-top:10px;">
+    <div class="griglia-3" style="margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>Squadra</label>
+        <select class="campo" id="mpar-squadra">
+          <option value="">— nessuna —</option>
+        </select>
+      </div>
       <div class="campo-gruppo">
         <label>Competizione</label>
         <input type="text" class="campo" id="mpar-competizione">
@@ -3430,6 +3436,11 @@ function apriModalPartita(id) {
   if (!p) return;
   partitaInModifica = id;
   document.getElementById('mpar-stagione').value = p.stagione || '2025/2026';
+  // Popola select squadra
+  const sqMpar = document.getElementById('mpar-squadra');
+  const sqList = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  sqMpar.innerHTML = '<option value="">— nessuna —</option>' + sqList.map(s => `<option>${s}</option>`).join('');
+  sqMpar.value = p.squadra || '';
   document.getElementById('mpar-data').value = p.data || '';
   document.getElementById('mpar-avversario').value = p.avversario || '';
   document.getElementById('mpar-luogo').value = p.luogo || 'trasferta';
@@ -3478,6 +3489,7 @@ async function aggiornaPartita() {
   });
   await db.collection('partite_dinamo').doc(partitaInModifica).update({
     stagione: document.getElementById('mpar-stagione').value,
+    squadra: document.getElementById('mpar-squadra').value,
     data: document.getElementById('mpar-data').value,
     avversario: document.getElementById('mpar-avversario').value.trim(),
     luogo: document.getElementById('mpar-luogo').value,
