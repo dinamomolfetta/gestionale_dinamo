@@ -1454,7 +1454,6 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <table id="tabella-partite">
             <thead>
               <tr>
-                <th>Squadra</th>
                 <th>Data</th>
                 <th>Avversario</th>
                 <th>Luogo</th>
@@ -3163,7 +3162,7 @@ function renderTabellaPartite(partite) {
     const gare = perSquadra[sq].sort((a,b) => (a.data||'').localeCompare(b.data||''));
     // Riga intestazione squadra
     righe += `<tr style="background:var(--blu);color:#fff;">
-      <td colspan="9" style="padding:8px 12px;font-weight:700;font-size:13px;letter-spacing:0.3px;">
+      <td colspan="8" style="padding:8px 12px;font-weight:700;font-size:13px;letter-spacing:0.3px;">
         🏐 ${sq} <span style="font-weight:400;font-size:12px;opacity:0.8;">(${gare.length} gare)</span>
       </td>
     </tr>`;
