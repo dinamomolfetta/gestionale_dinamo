@@ -1504,6 +1504,37 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </div>
       </div>
 
+      <!-- Aggiorna squadra partite in blocco -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">⚡</span> Aggiorna squadra partite in blocco</div>
+        <p style="font-size:13px;color:var(--testo-m);margin-bottom:14px;">Assegna la squadra a tutte le partite di una stagione che non ce l'hanno ancora.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end;">
+          <div class="campo-gruppo">
+            <label>Stagione</label>
+            <select class="campo" id="bulk-stag-partite">
+              <option value="2017/2018">2017/2018</option>
+              <option value="2018/2019">2018/2019</option>
+              <option value="2019/2020">2019/2020</option>
+              <option value="2020/2021">2020/2021</option>
+              <option value="2021/2022">2021/2022</option>
+              <option value="2022/2023">2022/2023</option>
+              <option value="2023/2024">2023/2024</option>
+              <option value="2024/2025">2024/2025</option>
+              <option value="2025/2026" selected>2025/2026</option>
+              <option value="2026/2027">2026/2027</option>
+            </select>
+          </div>
+          <div class="campo-gruppo">
+            <label>Squadra da assegnare</label>
+            <select class="campo" id="bulk-sq-partite">
+              <option value="">— seleziona squadra —</option>
+            </select>
+          </div>
+          <button class="btn btn-primario" onclick="aggiornaSqPartitiInBlocco()">⚡ Aggiorna</button>
+        </div>
+        <div id="bulk-sq-status" style="display:none;margin-top:10px;font-size:13px;"></div>
+      </div>
+
       <!-- Gestione squadre -->
       <div class="card">
         <div class="card-titolo"><span class="icona">🏐</span> Squadre / Categorie atleti</div>
@@ -2932,6 +2963,12 @@ function eliminaCategoria(i) {
 
 // ADMIN — SQUADRE
 function renderSquadreAdmin() {
+  // Aggiorna anche select nella card bulk partite
+  const bulkSq = document.getElementById('bulk-sq-partite');
+  if (bulkSq) {
+    const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+    bulkSq.innerHTML = '<option value="">— seleziona squadra —</option>' + sq.map(s => `<option>${s}</option>`).join('');
+  }
   const div = document.getElementById('lista-squadre-admin');
   div.innerHTML = squadreAttive.map((s,i) => `
     <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--grigio-m);">
@@ -4423,6 +4460,47 @@ async function eliminaDocumento(tipo) {
   await db.collection('atleti_dinamo').doc(atletaDocsId).update(update);
   mostraFileAttuale(tipo, '', '');
   mostraBadge();
+}
+
+
+async function aggiornaSqPartitiInBlocco() {
+  const stagione = document.getElementById('bulk-stag-partite').value;
+  const squadra  = document.getElementById('bulk-sq-partite').value;
+  const status   = document.getElementById('bulk-sq-status');
+
+  if (!squadra) { alert('Seleziona una squadra.'); return; }
+
+  status.style.display = '';
+  status.style.color = 'var(--testo-m)';
+  status.textContent = 'Ricerca partite in corso...';
+
+  try {
+    const snap = await db.collection('partite_dinamo')
+      .where('stagione', '==', stagione)
+      .get();
+
+    const daAggiornare = snap.docs.filter(d => !d.data().squadra);
+
+    if (!daAggiornare.length) {
+      status.style.color = 'var(--verde)';
+      status.textContent = `✅ Tutte le partite della stagione ${stagione} hanno già una squadra assegnata.`;
+      return;
+    }
+
+    status.textContent = `Aggiornamento ${daAggiornare.length} partite...`;
+
+    const batch = db.batch();
+    daAggiornare.forEach(doc => {
+      batch.update(doc.ref, { squadra });
+    });
+    await batch.commit();
+
+    status.style.color = 'var(--verde)';
+    status.textContent = `✅ ${daAggiornare.length} partite aggiornate con squadra "${squadra}"!`;
+  } catch(e) {
+    status.style.color = 'var(--rosso)';
+    status.textContent = '❌ Errore: ' + e.message;
+  }
 }
 
 </script>
