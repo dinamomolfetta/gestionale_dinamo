@@ -1454,7 +1454,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <table id="tabella-partite">
             <thead>
               <tr>
-                <th>Stagione</th>
+                <th>Squadra</th>
                 <th>Data</th>
                 <th>Avversario</th>
                 <th>Luogo</th>
@@ -3124,25 +3124,47 @@ function renderTabellaPartite(partite) {
     return;
   }
   document.getElementById('vuoto-partite').style.display = 'none';
-  tbody.innerHTML = partite.map(p => {
-    const punteggi = (p.set_punteggi||[]).map(s => `${s.dinamo}-${s.avversario}`).join(', ');
-    const esitoChip = p.esito === 'vittoria'
-      ? '<span class="chip chip-verde">V</span>'
-      : p.esito === 'sconfitta'
-      ? '<span class="chip chip-rosso">S</span>'
-      : '<span class="chip chip-grigio">P</span>';
-    return `<tr>
-      <td><span class="chip chip-blu" style="font-size:11px;">${p.stagione || '—'}</span></td>
-      <td>${formatData(p.data)}</td>
-      <td><strong>${p.avversario}</strong></td>
-      <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
-      <td>${p.competizione||'—'}</td>
-      <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
-      <td style="font-size:12px; color:var(--testo-m);">${punteggi||'—'}</td>
-      <td>${esitoChip}</td>
-      <td>${pEdit ? `<div style="display:flex;gap:6px;"><button class="btn btn-secondario btn-piccolo" onclick="apriModalPartita('${p.id}')">✏️</button><button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button></div>` : ''}</td>
+
+  // Raggruppa per squadra, poi ordina per data dentro ogni gruppo
+  const perSquadra = {};
+  partite.forEach(p => {
+    const sq = p.squadra || '—';
+    if (!perSquadra[sq]) perSquadra[sq] = [];
+    perSquadra[sq].push(p);
+  });
+  // Ordina squadre alfabeticamente, poi date per ogni squadra
+  const squadreOrdinate = Object.keys(perSquadra).sort();
+
+  let righe = '';
+  squadreOrdinate.forEach(sq => {
+    const gare = perSquadra[sq].sort((a,b) => (a.data||'').localeCompare(b.data||''));
+    // Riga intestazione squadra
+    righe += `<tr style="background:var(--blu);color:#fff;">
+      <td colspan="9" style="padding:8px 12px;font-weight:700;font-size:13px;letter-spacing:0.3px;">
+        🏐 ${sq} <span style="font-weight:400;font-size:12px;opacity:0.8;">(${gare.length} gare)</span>
+      </td>
     </tr>`;
-  }).join('');
+    // Righe gare
+    gare.forEach(p => {
+      const punteggi = (p.set_punteggi||[]).map(s => `${s.dinamo}-${s.avversario}`).join(', ');
+      const esitoChip = p.esito === 'vittoria'
+        ? '<span class="chip chip-verde">V</span>'
+        : p.esito === 'sconfitta'
+        ? '<span class="chip chip-rosso">S</span>'
+        : '<span class="chip chip-grigio">P</span>';
+      righe += `<tr style="border-bottom:1px solid var(--grigio-m);">
+        <td style="padding:8px 12px;">${formatData(p.data)}</td>
+        <td><strong>${p.avversario}</strong></td>
+        <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
+        <td>${p.competizione||'—'}</td>
+        <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
+        <td style="font-size:12px;color:var(--testo-m);">${punteggi||'—'}</td>
+        <td>${esitoChip}</td>
+        <td>${pEdit ? `<div style="display:flex;gap:6px;"><button class="btn btn-secondario btn-piccolo" onclick="apriModalPartita('${p.id}')">✏️</button><button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button></div>` : ''}</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = righe;
 }
 
 function renderRosa(partite) {
