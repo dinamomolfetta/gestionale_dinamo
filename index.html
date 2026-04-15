@@ -3888,7 +3888,15 @@ function aggiornaStagioneGara() {
 // ============================================================
 function apriHomePresenze() {
   document.getElementById('modal-home-presenze').classList.add('aperto');
-  renderHomePresenze();
+  // Carica tutte le partite direttamente da Firestore
+  if (tutteLePartite.length > 0) {
+    renderHomePresenze();
+  } else {
+    db.collection('partite_dinamo').get().then(snap => {
+      tutteLePartite = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderHomePresenze();
+    });
+  }
 }
 
 function chiudiHomePresenze() {
