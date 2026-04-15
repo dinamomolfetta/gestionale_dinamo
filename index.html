@@ -2997,7 +2997,6 @@ function avviaListenerPartite() {
 function avviaListenerTuttePartite() {
   if (unsub.tuttePartite) unsub.tuttePartite();
   unsub.tuttePartite = db.collection('partite_dinamo')
-    .orderBy('data','desc')
     .onSnapshot(snap => {
       tutteLePartite = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       // Aggiorna badge presenze in home
