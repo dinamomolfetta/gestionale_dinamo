@@ -3939,30 +3939,49 @@ function renderHomePresenze() {
   // Aggiorna badge totale atleti con presenze
   document.getElementById('home-num-presenze').textContent = lista.length;
 
-  // Header
-  thead.innerHTML = `<tr>
-    <th style="text-align:left;">Atleta</th>
-    <th style="text-align:left;font-size:11px;">Ruolo</th>
-    ${stagioni.map(s => `<th style="text-align:center;font-size:11px;white-space:nowrap;">${s}</th>`).join('')}
-    <th style="text-align:center;color:var(--arancio);">Totale</th>
-  </tr>`;
+  // Totali per stagione
+  const totaliStagione = stagioni.map((s, si) => lista.reduce((sum, a) => sum + a.presenzeStagioni[si], 0));
+  const totaleGenerale = lista.reduce((sum, a) => sum + a.totale, 0);
 
-  // Righe
-  tbody.innerHTML = lista.map(a => `
-    <tr style="border-bottom:1px solid var(--grigio-m);">
-      <td style="padding:8px 6px;font-weight:600;">${a.cognome} ${a.nome}</td>
-      <td style="padding:8px 6px;font-size:12px;color:var(--testo-m);">${a.ruolo}</td>
+  // Header
+  thead.innerHTML = `
+    <tr style="background:var(--grigio-s);">
+      <th style="text-align:left;padding:10px 8px;">Atleta</th>
+      <th style="text-align:left;padding:10px 8px;font-size:11px;">Ruolo</th>
+      ${stagioni.map(s => `<th style="text-align:center;padding:10px 8px;font-size:11px;white-space:nowrap;">${s}</th>`).join('')}
+      <th style="text-align:center;padding:10px 8px;color:var(--arancio);white-space:nowrap;">Totale</th>
+    </tr>`;
+
+  // Righe atleti
+  const righeAtleti = lista.map((a, i) => `
+    <tr style="border-bottom:1px solid var(--grigio-m);${i%2===0?'':'background:rgba(27,42,107,0.02)'}">
+      <td style="padding:8px;font-weight:600;">${a.cognome} ${a.nome}</td>
+      <td style="padding:8px;font-size:12px;color:var(--testo-m);">${a.ruolo}</td>
       ${a.presenzeStagioni.map(n => `
-        <td style="text-align:center;padding:8px 6px;">
-          ${n > 0 
+        <td style="text-align:center;padding:8px;">
+          ${n > 0
             ? `<span style="background:var(--blu-l);color:var(--blu);font-weight:700;padding:2px 8px;border-radius:10px;">${n}</span>`
             : `<span style="color:var(--grigio-m);">—</span>`}
         </td>`).join('')}
-      <td style="text-align:center;padding:8px 6px;">
+      <td style="text-align:center;padding:8px;">
         <span style="background:var(--arancio);color:#fff;font-weight:800;padding:3px 10px;border-radius:10px;">${a.totale}</span>
       </td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
+
+  // Riga totali per stagione
+  const rigaTotali = `
+    <tr style="background:var(--blu);border-top:2px solid var(--blu);">
+      <td colspan="2" style="padding:10px 8px;font-weight:700;color:#fff;font-size:13px;">TOTALE PRESENZE PER STAGIONE</td>
+      ${totaliStagione.map(t => `
+        <td style="text-align:center;padding:10px 8px;">
+          <span style="background:var(--arancio);color:#fff;font-weight:800;padding:3px 10px;border-radius:10px;">${t}</span>
+        </td>`).join('')}
+      <td style="text-align:center;padding:10px 8px;">
+        <span style="background:var(--arancio);color:#fff;font-weight:900;padding:4px 12px;border-radius:10px;font-size:15px;">${totaleGenerale}</span>
+      </td>
+    </tr>`;
+
+  tbody.innerHTML = righeAtleti + rigaTotali;
 }
 
 
