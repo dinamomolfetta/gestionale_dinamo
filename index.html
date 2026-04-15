@@ -3620,11 +3620,11 @@ function apriSezioneAtleti(stagione) {
 function aggiornaBadgeStagioneAtleti(stagione) {
   let badge = document.getElementById('badge-stagione-atleti');
   if (!badge) {
-    const div = document.getElementById('lista-atleti').parentElement;
     badge = document.createElement('div');
     badge.id = 'badge-stagione-atleti';
-    badge.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 14px;background:var(--blu-l);border-radius:var(--raggio);font-size:13px;';
-    div.insertBefore(badge, div.querySelector('.barra-ricerca') || div.firstChild);
+    badge.style.cssText = 'display:none;align-items:center;gap:10px;margin-bottom:10px;padding:8px 14px;background:var(--blu-l);border-radius:var(--raggio);font-size:13px;';
+    const sezione = document.getElementById('sezione-atleti');
+    if (sezione) sezione.insertBefore(badge, sezione.firstChild);
   }
   if (stagione) {
     badge.style.display = 'flex';
