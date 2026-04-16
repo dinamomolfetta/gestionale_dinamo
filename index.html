@@ -1791,7 +1791,11 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <span>Modifica partita</span>
       <button class="modal-chiudi" onclick="chiudiModalPartita()">×</button>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;">
+    <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr 1fr 1fr; gap:10px;">
+      <div class="campo-gruppo">
+        <label>N° gara</label>
+        <input type="number" class="campo" id="mpar-numero" placeholder="—" min="1">
+      </div>
       <div class="campo-gruppo">
         <label>Stagione</label>
         <select class="campo" id="mpar-stagione">
@@ -3616,6 +3620,7 @@ function apriModalPartita(id) {
   if (!p) return;
   partitaInModifica = id;
   document.getElementById('mpar-stagione').value = p.stagione || '2025/2026';
+  const mparNum = document.getElementById('mpar-numero'); if(mparNum) mparNum.value = p.numero || '';
   // Popola select squadra
   const sqMpar = document.getElementById('mpar-squadra');
   const sqList = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
@@ -3668,6 +3673,7 @@ async function aggiornaPartita() {
     giocatori.push({ id: cb.value, nome: cb.dataset.nome });
   });
   await db.collection('partite_dinamo').doc(partitaInModifica).update({
+    numero: parseInt(document.getElementById('mpar-numero')?.value)||null,
     stagione: document.getElementById('mpar-stagione').value,
     squadra: document.getElementById('mpar-squadra').value,
     data: document.getElementById('mpar-data').value,
@@ -4901,51 +4907,70 @@ function parseRefertoStatistiche() {
   const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
   if (!p) return;
 
-  const righe = testo.split('\n').map(r => r.trim()).filter(r => r);
+  // Normalizza: sostituisci % attaccate ai numeri con spazio, unifica separatori
+  // Il testo dal PDF può essere tutto su una riga o su più righe
+  // Strategia: cerca pattern "NUMERO COGNOME N. valori..." ovunque nel testo
+  const testoNorm = testo.replace(/\n/g,' ').replace(/\s+/g,' ');
+
+  // Pattern per ogni riga atleta: numero_maglia NOME_MAIUSCOLO valori
+  // Es: "8 LABIANCA N. 20 17 . 1 9 1 77% 66% 28 3 1 17 60% 2"
+  // Il nome può avere punti (abbreviazioni) e spazi
+  // I valori sono numeri, punti (=0), o percentuali
+  const reAtleta = /(\d{1,2})\s+([A-Z][A-Z\s\.]+?)\s+((?:[\d]+%?|\.)(?:\s+(?:[\d]+%?|\.)){5,})/g;
+
   let importati = 0;
+  let match;
 
-  righe.forEach(riga => {
-    // Pattern: numero maglia COGNOME N. (opz) pt_tot bat_tot bat_err bat_ace ...
-    // Es: "8 LABIANCA N. 20 17 . 1 9 1 77% 66% 28 3 1 17 60% 2"
-    const match = riga.match(/^(\d+)\s+([A-Z][A-Z\s\.]+?)\s+([\d\.%]+(?:\s+[\d\.%]+)*)\s*$/);
-    if (!match) return;
-
+  while ((match = reAtleta.exec(testoNorm)) !== null) {
     const maglia = parseInt(match[1]);
-    const valori = match[3].split(/\s+/).map(v => v === '.' ? 0 : parseFloat(v.replace('%',''))||0);
+    const valoriRaw = match[3].trim().split(/\s+/);
+    const valori = valoriRaw.map(v => {
+      if (v === '.') return 0;
+      return parseFloat(v.replace('%','')) || 0;
+    });
 
-    // Trova atleta per maglia nella stagione della partita
+    // Cerca atleta per maglia nella stagione
     const atleta = atletiInMemoria.find(a =>
       (a.stagioni||[]).some(s => s.stagione === p.stagione && parseInt(s.maglia) === maglia)
     );
-    if (!atleta) return;
+    if (!atleta) continue;
 
     if (!statisticheTemp[atleta.id]) statisticheTemp[atleta.id] = { id: atleta.id };
     const s = statisticheTemp[atleta.id];
 
-    // Mappa colonne referto FIPAV:
-    // pt_tot bat_tot bat_err bat_ace ric_err _ ric_pos ric_prf att_err att_mur att_pt att_perc _ muro_pt
-    if (valori.length >= 14) {
-      s.pt_tot  = valori[0];
-      s.bat_tot = valori[1];
-      s.bat_err = valori[2];
-      s.bat_ace = valori[3];
-      s.ric_err = valori[4];
-      s.ric_pos = valori[6];
-      s.ric_prf = valori[7];
-      s.att_err = valori[8];
-      s.att_mur = valori[9];
-      s.att_pt  = valori[10];
-      s.att_perc= valori[11];
-      s.muro_pt = valori[13];
+    // Struttura referto FIPAV (15 colonne dopo il nome):
+    // 0:pt_tot  1:bat_tot  2:bat_err  3:bat_ace
+    // 4:ric_err  5:ric_(skip)  6:ric_pos  7:ric_prf
+    // 8:att_err  9:att_mur  10:att_pt  11:att_perc  12:att_(skip)
+    // 13:muro_pt
+    // Gestisce anche formati con meno colonne
+    if (valori.length >= 8) {
+      s.pt_tot   = valori[0] || 0;
+      s.bat_tot  = valori[1] || 0;
+      s.bat_err  = valori[2] || 0;
+      s.bat_ace  = valori[3] || 0;
+      s.ric_err  = valori[4] || 0;
+      // valori[5] = colonna vuota ricezione, skippa
+      s.ric_pos  = valori.length > 6 ? valori[6] : 0;
+      s.ric_prf  = valori.length > 7 ? valori[7] : 0;
+      s.att_err  = valori.length > 8 ? valori[8] : 0;
+      s.att_mur  = valori.length > 9 ? valori[9] : 0;
+      s.att_pt   = valori.length > 10 ? valori[10] : 0;
+      s.att_perc = valori.length > 11 ? valori[11] : 0;
+      // valori[12] = colonna vuota attacco, skippa
+      s.muro_pt  = valori.length > 13 ? valori[13] : 0;
+      // Ricalcola pt_tot da ace+att_pt+muro se il valore parsato è 0
+      if (!s.pt_tot) s.pt_tot = s.bat_ace + s.att_pt + s.muro_pt;
     }
     importati++;
-  });
+  }
 
   if (importati > 0) {
     renderTabellaStatPartita(p);
-    alert(`✅ Importati ${importati} atleti dal referto!`);
+    alert('✅ Importati ' + importati + ' atleti dal referto!');
   } else {
-    alert('Nessun atleta riconosciuto. Assicurati che le maglie siano registrate nella stagione corretta.');
+    // Debug: mostra quanti token trovati
+    alert('Nessun atleta riconosciuto.\n\nAssicurati che:\n1. Le maglie siano registrate nella stagione corretta\n2. Il testo sia della sezione Dinamo (non avversario)\n\nSe il problema persiste, controlla che le maglie nel gestionale corrispondano ai numeri nel referto.');
   }
 }
 
