@@ -4922,7 +4922,7 @@ function parseRefertoStatistiche() {
   let importati = 0;
 
   for (const parte of parti) {
-    const match = parte.trim().match(/^(\d{1,2})\s+([A-Z][A-Z\s\.]+?)\s+((?:[\d]+%?|\.)(?:\s+(?:[\d]+%?|\.)){5,})/);
+    const match = parte.trim().match(/^(\d{1,2})\s+([A-Z][A-Z\s\.\(\)]+?)\s+((?:[\d]+(?:\.\d+)?%?|\.)(?:\s+(?:[\d]+(?:\.\d+)?%?|\.))*)/);
     if (!match) continue;
 
     const maglia = parseInt(match[1]);
