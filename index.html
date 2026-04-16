@@ -1440,10 +1440,26 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
         <!-- Presenze partita -->
         <div style="margin-top:14px;">
-          <div style="margin-bottom:8px;">
-            <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px;">Giocatori in campo</label>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:8px;">Hai il referto cartaceo?</label>
+            <div style="display:flex; gap:10px;">
+              <button id="btn-ha-referto-si" class="btn btn-secondario" onclick="impostaHaReferto(true)" style="flex:1;">
+                ✅ Sì — inserirò i dati dal referto
+              </button>
+              <button id="btn-ha-referto-no" class="btn btn-secondario" onclick="impostaHaReferto(false)" style="flex:1;">
+                ❌ No — seleziono i giocatori manualmente
+              </button>
+            </div>
           </div>
-          <div id="presenze-partita-lista" style="margin-top:4px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+          <!-- Messaggio quando ha il referto -->
+          <div id="msg-ha-referto" style="display:none; padding:10px 14px; background:var(--blu-l); border-radius:var(--raggio); font-size:13px; color:var(--blu);">
+            💡 Dopo aver salvato la partita, usa il pulsante <strong>📊</strong> nella tabella per importare le statistiche dal referto. I giocatori verranno rilevati automaticamente.
+          </div>
+          <!-- Lista atleti quando non ha il referto -->
+          <div id="presenze-partita-wrapper" style="display:none;">
+            <label style="font-size:12px; font-weight:600; color:var(--testo-m); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:8px;">Seleziona giocatori in campo</label>
+            <div id="presenze-partita-lista" style="margin-top:4px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+          </div>
         </div>
 
         <div style="margin-top:14px;">
@@ -3269,6 +3285,16 @@ async function salvaPartita() {
 
   // Reset form
   ['par-data','par-avversario','par-competizione','par-numero'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  // Reset toggle referto
+  haRefertoCartaceo = null;
+  const btnSi = document.getElementById('btn-ha-referto-si');
+  const btnNo = document.getElementById('btn-ha-referto-no');
+  if (btnSi) { btnSi.style.background=''; btnSi.style.color=''; btnSi.style.borderColor=''; }
+  if (btnNo) { btnNo.style.background=''; btnNo.style.color=''; btnNo.style.borderColor=''; }
+  const msg = document.getElementById('msg-ha-referto');
+  const wrap = document.getElementById('presenze-partita-wrapper');
+  if (msg) msg.style.display = 'none';
+  if (wrap) wrap.style.display = 'none';
   document.getElementById('par-stagione').value = stagioneSel || '2025/2026';
   document.getElementById('par-set-d').value = '';
   document.getElementById('par-set-a').value = '';
@@ -5056,6 +5082,32 @@ function renderStatistichesStagionali() {
         <span style="background:var(--arancio);color:#fff;font-weight:800;padding:3px 10px;border-radius:10px;">${Math.round(a.pt_tot)}</span>
       </td>
     </tr>`).join('');
+}
+
+
+let haRefertoCartaceo = null;
+
+function impostaHaReferto(valore) {
+  haRefertoCartaceo = valore;
+  // Aggiorna stile pulsanti
+  const btnSi = document.getElementById('btn-ha-referto-si');
+  const btnNo = document.getElementById('btn-ha-referto-no');
+  if (btnSi) {
+    btnSi.style.background = valore ? 'var(--verde)' : '';
+    btnSi.style.color = valore ? '#fff' : '';
+    btnSi.style.borderColor = valore ? 'var(--verde)' : '';
+  }
+  if (btnNo) {
+    btnNo.style.background = !valore ? 'var(--arancio)' : '';
+    btnNo.style.color = !valore ? '#fff' : '';
+    btnNo.style.borderColor = !valore ? 'var(--arancio)' : '';
+  }
+  // Mostra/nascondi sezioni
+  const msgReferto = document.getElementById('msg-ha-referto');
+  const wrapper = document.getElementById('presenze-partita-wrapper');
+  if (msgReferto) msgReferto.style.display = valore ? '' : 'none';
+  if (wrapper) wrapper.style.display = !valore ? '' : 'none';
+  if (!valore) renderPresenzaPartita();
 }
 
 </script>
