@@ -1343,7 +1343,11 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           </div>
           <div id="import-status" style="display:none; margin-top:8px; padding:10px 14px; border-radius:var(--raggio); font-size:13px;"></div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+        <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr 1fr; gap:10px;">
+          <div class="campo-gruppo">
+            <label>N° gara</label>
+            <input type="number" class="campo" id="par-numero" placeholder="22" min="1">
+          </div>
           <div class="campo-gruppo">
             <label>Stagione</label>
             <select class="campo" id="par-stagione" onchange="aggiornaStagioneGara()">
@@ -1454,6 +1458,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <table id="tabella-partite">
             <thead>
               <tr>
+                <th>N°</th>
                 <th>Data</th>
                 <th>Avversario</th>
                 <th>Luogo</th>
@@ -1474,6 +1479,47 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       </div>
 
 
+
+      <!-- Totale statistiche stagionale -->
+      <div class="card">
+        <div class="card-titolo"><span class="icona">📊</span> Totale statistiche stagionale</div>
+        <div class="tabella-wrap" style="overflow-x:auto;">
+          <table id="tabella-stat-stagione" style="font-size:12px;min-width:900px;">
+            <thead>
+              <tr style="background:var(--blu);color:#fff;">
+                <th style="padding:8px;text-align:left;">Atleta</th>
+                <th style="padding:8px;text-align:center;">Gare</th>
+                <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">BATTUTA</th>
+                <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
+                <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
+                <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">MURO</th>
+                <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">PT TOT</th>
+              </tr>
+              <tr style="background:var(--blu-l);font-size:11px;">
+                <th style="padding:6px 8px;"></th>
+                <th style="padding:6px;text-align:center;"></th>
+                <th style="padding:6px;text-align:center;">Tot</th>
+                <th style="padding:6px;text-align:center;">Err</th>
+                <th style="padding:6px;text-align:center;">Ace</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+                <th style="padding:6px;text-align:center;">Pos%</th>
+                <th style="padding:6px;text-align:center;">Prf%</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+                <th style="padding:6px;text-align:center;">Mur</th>
+                <th style="padding:6px;text-align:center;">Pt</th>
+                <th style="padding:6px;text-align:center;">%</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Pt</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);font-weight:800;color:var(--arancio);">Tot</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-stat-stagione"></tbody>
+          </table>
+          <div class="stato-vuoto" id="vuoto-stat-stagione" style="display:none;">
+            <div class="icona-grande">📊</div>
+            <p>Nessuna statistica disponibile</p>
+          </div>
+        </div>
+      </div>
 
     </section>
 
@@ -1679,6 +1725,61 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <div id="vuoto-home-presenze" style="display:none; text-align:center; padding:40px; color:var(--grigio-t);">
         Nessuna presenza registrata
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL STATISTICHE PARTITA -->
+<div class="modal-overlay" id="modal-stat-partita">
+  <div class="modal" style="max-width:1000px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-titolo">
+      <span id="modal-stat-titolo">📊 Statistiche partita</span>
+      <button class="modal-chiudi" onclick="chiudiStatistichePartita()">×</button>
+    </div>
+
+    <!-- Import referto -->
+    <div style="background:var(--grigio-s);border-radius:var(--raggio);padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📋 Importa da testo referto</div>
+      <textarea id="stat-referto-testo" class="campo" rows="5" placeholder="Incolla qui il testo del referto (solo la sezione Dinamo)..." style="font-family:monospace;font-size:12px;"></textarea>
+      <button class="btn btn-primario btn-piccolo" style="margin-top:8px;" onclick="parseRefertoStatistiche()">🔍 Importa statistiche</button>
+    </div>
+
+    <!-- Tabella statistiche -->
+    <div class="tabella-wrap" style="overflow-x:auto;">
+      <table id="tabella-stat-partita" style="font-size:12px;min-width:900px;">
+        <thead>
+          <tr style="background:var(--blu);color:#fff;">
+            <th style="padding:8px;text-align:left;">Atleta</th>
+            <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">BATTUTA</th>
+            <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
+            <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
+            <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">MURO</th>
+            <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">PT TOT</th>
+          </tr>
+          <tr style="background:var(--blu-l);font-size:11px;">
+            <th style="padding:6px 8px;"></th>
+            <th style="padding:6px;text-align:center;">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
+            <th style="padding:6px;text-align:center;">Ace</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+            <th style="padding:6px;text-align:center;">Pos%</th>
+            <th style="padding:6px;text-align:center;">Prf%</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+            <th style="padding:6px;text-align:center;">Mur</th>
+            <th style="padding:6px;text-align:center;">Pt</th>
+            <th style="padding:6px;text-align:center;">%</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Pt</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);font-weight:800;color:var(--arancio);">Tot</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-stat-partita"></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondario" onclick="chiudiStatistichePartita()">Chiudi</button>
+      <button class="btn btn-primario" onclick="salvaStatistichePartita()">💾 Salva statistiche</button>
     </div>
   </div>
 </div>
@@ -3152,13 +3253,14 @@ async function salvaPartita() {
 
   await db.collection('partite_dinamo').add({
     data, avversario: avv, luogo, competizione: comp,
+    numero: parseInt(document.getElementById('par-numero')?.value)||null,
     set_dinamo: setD, set_avversario: setA, set_punteggi,
     giocatori, esito, stagione: document.getElementById('par-stagione').value || stagioneSel,
     creato: firebase.firestore.FieldValue.serverTimestamp()
   });
 
   // Reset form
-  ['par-data','par-avversario','par-competizione'].forEach(id => document.getElementById(id).value = '');
+  ['par-data','par-avversario','par-competizione','par-numero'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('par-stagione').value = stagioneSel || '2025/2026';
   document.getElementById('par-set-d').value = '';
   document.getElementById('par-set-a').value = '';
@@ -3174,6 +3276,7 @@ async function salvaPartita() {
 
 function renderStatistiche() {
   const partite = partitiInMemoria;
+  renderStatistichesStagionali();
   const pg = partite.length;
   const vinte  = partite.filter(p => p.esito === 'vittoria').length;
   const perse  = partite.filter(p => p.esito === 'sconfitta').length;
@@ -3217,7 +3320,7 @@ function renderTabellaPartite(partite) {
     const gare = perSquadra[sq].sort((a,b) => (a.data||'').localeCompare(b.data||''));
     // Riga intestazione squadra
     righe += `<tr style="background:var(--blu);color:#fff;">
-      <td colspan="8" style="padding:8px 12px;font-weight:700;font-size:13px;letter-spacing:0.3px;color:#fff;">
+      <td colspan="9" style="padding:8px 12px;font-weight:700;font-size:13px;letter-spacing:0.3px;color:#fff;">
         🏐 ${sq} <span style="font-weight:400;font-size:12px;opacity:0.8;">(${gare.length} gare)</span>
       </td>
     </tr>`;
@@ -3230,6 +3333,7 @@ function renderTabellaPartite(partite) {
         ? '<span class="chip chip-rosso">S</span>'
         : '<span class="chip chip-grigio">P</span>';
       righe += `<tr style="border-bottom:1px solid var(--grigio-m);">
+        <td style="padding:8px 12px;color:var(--grigio-t);font-size:12px;">${p.numero ? '#'+p.numero : '—'}</td>
         <td style="padding:8px 12px;">${formatData(p.data)}</td>
         <td><strong>${p.avversario}</strong></td>
         <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
@@ -3237,7 +3341,12 @@ function renderTabellaPartite(partite) {
         <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
         <td style="font-size:12px;color:var(--testo-m);">${punteggi||'—'}</td>
         <td>${esitoChip}</td>
-        <td>${pEdit ? `<div style="display:flex;gap:6px;"><button class="btn btn-secondario btn-piccolo" onclick="apriModalPartita('${p.id}')">✏️</button><button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button></div>` : ''}</td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-piccolo" style="background:var(--arancio);color:#fff;border:none;" onclick="apriStatistichePartita('${p.id}')">📊</button>
+            ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalPartita('${p.id}')">✏️</button><button class="btn btn-pericolo btn-piccolo" onclick="eliminaPartita('${p.id}')">🗑️</button>` : ''}
+          </div>
+        </td>
       </tr>`;
     });
   });
@@ -4685,6 +4794,216 @@ async function eliminaDocumentoStaff() {
   await db.collection('staff_dinamo').doc(staffDocsId).update({ doc_url:'', doc_nome:'', doc_tipo:'', doc_numero:'' });
   document.getElementById('stf-doc-attuale').style.display = 'none';
   mostraBadge();
+}
+
+
+// ============================================================
+// STATISTICHE PARTITA
+// ============================================================
+let partitaStatId = null;
+let statisticheTemp = {}; // { atletaId: { bat_tot, bat_err, bat_ace, ric_err, ric_pos, ric_prf, att_err, att_mur, att_pt, att_perc, muro_pt, pt_tot } }
+
+const STAT_CAMPI = ['bat_tot','bat_err','bat_ace','ric_err','ric_pos','ric_prf','att_err','att_mur','att_pt','att_perc','muro_pt','pt_tot'];
+
+function apriStatistichePartita(id) {
+  partitaStatId = id;
+  const p = partitiInMemoria.find(x => x.id === id) || tutteLePartite.find(x => x.id === id);
+  if (!p) return;
+
+  const titolo = `📊 #${p.numero||'—'} — ${p.avversario} (${formatData(p.data)})`;
+  document.getElementById('modal-stat-titolo').textContent = titolo;
+  document.getElementById('stat-referto-testo').value = '';
+
+  // Carica statistiche esistenti
+  statisticheTemp = {};
+  (p.statistiche||[]).forEach(s => { statisticheTemp[s.id] = { ...s }; });
+
+  renderTabellaStatPartita(p);
+  document.getElementById('modal-stat-partita').classList.add('aperto');
+}
+
+function chiudiStatistichePartita() {
+  document.getElementById('modal-stat-partita').classList.remove('aperto');
+  partitaStatId = null;
+}
+
+function renderTabellaStatPartita(p) {
+  const tbody = document.getElementById('tbody-stat-partita');
+  const giocatori = p.giocatori || [];
+
+  if (!giocatori.length) {
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--grigio-t);">Nessun giocatore registrato per questa partita</td></tr>';
+    return;
+  }
+
+  // Totali riga
+  const totRow = {};
+  STAT_CAMPI.forEach(c => totRow[c] = 0);
+
+  tbody.innerHTML = giocatori.map(g => {
+    const st = statisticheTemp[g.id] || {};
+    STAT_CAMPI.forEach(c => { if (st[c]) totRow[c] += parseFloat(st[c])||0; });
+    const atleta = atletiInMemoria.find(a => a.id === g.id);
+    const stag = atleta?.stagioni?.find(s => s.stagione === p.stagione);
+    const maglia = stag?.maglia || atleta?.maglia || '';
+    return `<tr style="border-bottom:1px solid var(--grigio-m);">
+      <td style="padding:6px 8px;font-weight:600;">${maglia?'<span style="color:var(--arancio);font-size:11px;margin-right:4px;">#'+maglia+'</span>':''}${g.nome}</td>
+      ${STAT_CAMPI.map(c => `<td style="padding:4px;${['ric_err','att_err'].includes(c)?'border-left:1px solid var(--grigio-m)':''}${c==='muro_pt'?'border-left:1px solid var(--grigio-m)':''}${c==='pt_tot'?'border-left:1px solid var(--grigio-m);font-weight:800;color:var(--arancio);':''}" >
+        <input type="number" step="0.01" min="0" max="100"
+          value="${st[c]||''}"
+          placeholder="—"
+          style="width:48px;text-align:center;border:1px solid var(--grigio-m);border-radius:4px;padding:3px 4px;font-size:12px;background:${st[c]?'var(--blu-l)':''};"
+          oninput="aggiornaStat('${g.id}','${c}',this.value)">
+      </td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  // Riga totali
+  tbody.innerHTML += `<tr style="background:var(--blu);color:#fff;">
+    <td style="padding:8px;font-weight:700;">TOTALE</td>
+    ${STAT_CAMPI.map(c => `<td style="padding:8px;text-align:center;font-weight:700;">${totRow[c]?totRow[c].toFixed(c.includes('perc')||c.includes('pos')||c.includes('prf')?1:0):''}</td>`).join('')}
+  </tr>`;
+}
+
+function aggiornaStat(atletaId, campo, valore) {
+  if (!statisticheTemp[atletaId]) statisticheTemp[atletaId] = { id: atletaId };
+  statisticheTemp[atletaId][campo] = parseFloat(valore) || 0;
+  // Aggiorna pt_tot automaticamente
+  const s = statisticheTemp[atletaId];
+  s.pt_tot = (parseFloat(s.bat_ace)||0) + (parseFloat(s.att_pt)||0) + (parseFloat(s.muro_pt)||0);
+  const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
+  if (p) {
+    const input = document.querySelector(`tr input[oninput*="${atletaId}"][oninput*="pt_tot"]`);
+    if (input) { input.value = s.pt_tot || ''; input.style.background = s.pt_tot ? 'var(--blu-l)' : ''; }
+  }
+}
+
+async function salvaStatistichePartita() {
+  if (!partitaStatId) return;
+  const statistiche = Object.values(statisticheTemp).filter(s => s.id);
+  await db.collection('partite_dinamo').doc(partitaStatId).update({ statistiche });
+  // Aggiorna in memoria
+  const idx = partitiInMemoria.findIndex(x => x.id === partitaStatId);
+  if (idx >= 0) partitiInMemoria[idx].statistiche = statistiche;
+  const idx2 = tutteLePartite.findIndex(x => x.id === partitaStatId);
+  if (idx2 >= 0) tutteLePartite[idx2].statistiche = statistiche;
+  mostraBadge();
+  chiudiStatistichePartita();
+}
+
+// ============================================================
+// PARSE REFERTO PER STATISTICHE
+// ============================================================
+function parseRefertoStatistiche() {
+  const testo = document.getElementById('stat-referto-testo').value;
+  if (!testo.trim()) { alert('Incolla il testo del referto prima.'); return; }
+
+  const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
+  if (!p) return;
+
+  const righe = testo.split('\n').map(r => r.trim()).filter(r => r);
+  let importati = 0;
+
+  righe.forEach(riga => {
+    // Pattern: numero maglia COGNOME N. (opz) pt_tot bat_tot bat_err bat_ace ...
+    // Es: "8 LABIANCA N. 20 17 . 1 9 1 77% 66% 28 3 1 17 60% 2"
+    const match = riga.match(/^(\d+)\s+([A-Z][A-Z\s\.]+?)\s+([\d\.%]+(?:\s+[\d\.%]+)*)\s*$/);
+    if (!match) return;
+
+    const maglia = parseInt(match[1]);
+    const valori = match[3].split(/\s+/).map(v => v === '.' ? 0 : parseFloat(v.replace('%',''))||0);
+
+    // Trova atleta per maglia nella stagione della partita
+    const atleta = atletiInMemoria.find(a =>
+      (a.stagioni||[]).some(s => s.stagione === p.stagione && parseInt(s.maglia) === maglia)
+    );
+    if (!atleta) return;
+
+    if (!statisticheTemp[atleta.id]) statisticheTemp[atleta.id] = { id: atleta.id };
+    const s = statisticheTemp[atleta.id];
+
+    // Mappa colonne referto FIPAV:
+    // pt_tot bat_tot bat_err bat_ace ric_err _ ric_pos ric_prf att_err att_mur att_pt att_perc _ muro_pt
+    if (valori.length >= 14) {
+      s.pt_tot  = valori[0];
+      s.bat_tot = valori[1];
+      s.bat_err = valori[2];
+      s.bat_ace = valori[3];
+      s.ric_err = valori[4];
+      s.ric_pos = valori[6];
+      s.ric_prf = valori[7];
+      s.att_err = valori[8];
+      s.att_mur = valori[9];
+      s.att_pt  = valori[10];
+      s.att_perc= valori[11];
+      s.muro_pt = valori[13];
+    }
+    importati++;
+  });
+
+  if (importati > 0) {
+    renderTabellaStatPartita(p);
+    alert(`✅ Importati ${importati} atleti dal referto!`);
+  } else {
+    alert('Nessun atleta riconosciuto. Assicurati che le maglie siano registrate nella stagione corretta.');
+  }
+}
+
+
+function renderStatistichesStagionali() {
+  const tbody = document.getElementById('tbody-stat-stagione');
+  const vuoto = document.getElementById('vuoto-stat-stagione');
+  if (!tbody) return;
+
+  // Aggrega statistiche da tutte le partite in memoria
+  const aggregato = {}; // { atletaId: { gare, bat_tot, ... } }
+
+  partitiInMemoria.forEach(p => {
+    (p.statistiche||[]).forEach(s => {
+      if (!aggregato[s.id]) aggregato[s.id] = { gare: 0 };
+      aggregato[s.id].gare++;
+      STAT_CAMPI.forEach(c => {
+        aggregato[s.id][c] = (aggregato[s.id][c]||0) + (parseFloat(s[c])||0);
+      });
+    });
+  });
+
+  const lista = Object.entries(aggregato).map(([id, dati]) => {
+    const atleta = atletiInMemoria.find(a => a.id === id);
+    return { id, nome: atleta ? atleta.cognome + ' ' + atleta.nome : id, ...dati };
+  }).sort((a,b) => b.pt_tot - a.pt_tot);
+
+  if (!lista.length) {
+    vuoto.style.display = '';
+    tbody.innerHTML = '';
+    return;
+  }
+  vuoto.style.display = 'none';
+
+  const fmt = (v, isPerc) => {
+    if (!v) return '<span style="color:var(--grigio-m);">—</span>';
+    return isPerc ? v.toFixed(1)+'%' : v.toFixed(0);
+  };
+
+  tbody.innerHTML = lista.map(a => `
+    <tr style="border-bottom:1px solid var(--grigio-m);">
+      <td style="padding:7px 8px;font-weight:600;">${a.nome}</td>
+      <td style="padding:7px 8px;text-align:center;"><span class="chip chip-blu">${a.gare}</span></td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(a.bat_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--rosso);">${fmt(a.bat_err)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--verde);font-weight:600;">${fmt(a.bat_ace)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--rosso);border-left:1px solid var(--grigio-m);">${fmt(a.ric_err)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(a.ric_pos,true)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(a.ric_prf,true)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--rosso);border-left:1px solid var(--grigio-m);">${fmt(a.att_err)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(a.att_mur)}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:600;">${fmt(a.att_pt)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(a.att_perc,true)}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:600;border-left:1px solid var(--grigio-m);">${fmt(a.muro_pt)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">
+        <span style="background:var(--arancio);color:#fff;font-weight:800;padding:3px 10px;border-radius:10px;">${Math.round(a.pt_tot)}</span>
+      </td>
+    </tr>`).join('');
 }
 
 </script>
