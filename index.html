@@ -4911,21 +4911,21 @@ function parseRefertoStatistiche() {
   const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
   if (!p) return;
 
-  // Normalizza: sostituisci % attaccate ai numeri con spazio, unifica separatori
-  // Il testo dal PDF può essere tutto su una riga o su più righe
-  // Strategia: cerca pattern "NUMERO COGNOME N. valori..." ovunque nel testo
-  const testoNorm = testo.replace(/\n/g,' ').replace(/\s+/g,' ');
+  // Normalizza il testo
+  // Strategia robusta: tokenizza e ricostruisce righe cercando "numero NOME... valori"
+  // Prima divide su pattern "numero_maglia COGNOME" per separare le righe atleta
+  const testoNorm = testo.replace(/\n/g,' ').replace(/\r/g,'').replace(/\s+/g,' ').trim();
 
-  // Pattern per ogni riga atleta: numero_maglia NOME_MAIUSCOLO valori
-  // Es: "8 LABIANCA N. 20 17 . 1 9 1 77% 66% 28 3 1 17 60% 2"
-  // Il nome può avere punti (abbreviazioni) e spazi
-  // I valori sono numeri, punti (=0), o percentuali
-  const reAtleta = /(\d{1,2})\s+([A-Z][A-Z\s\.]+?)\s+((?:[\d]+%?|\.)(?:\s+(?:[\d]+%?|\.)){5,})/g;
+  // Splitta il testo in "righe atleta" cercando il pattern: cifra(1-2) SPAZIO LETTERA_MAIUSCOLA
+  // Ogni occorrenza di questo pattern segna l'inizio di un nuovo atleta
+  const parti = testoNorm.split(/(?=\b\d{1,2}\s+[A-Z]{2,})/);
 
   let importati = 0;
-  let match;
 
-  while ((match = reAtleta.exec(testoNorm)) !== null) {
+  for (const parte of parti) {
+    const match = parte.trim().match(/^(\d{1,2})\s+([A-Z][A-Z\s\.]+?)\s+((?:[\d]+%?|\.)(?:\s+(?:[\d]+%?|\.)){5,})/);
+    if (!match) continue;
+
     const maglia = parseInt(match[1]);
     const valoriRaw = match[3].trim().split(/\s+/);
     const valori = valoriRaw.map(v => {
