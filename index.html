@@ -4933,9 +4933,14 @@ function parseRefertoStatistiche() {
       return parseFloat(v.replace('%','')) || 0;
     });
 
-    // Cerca atleta per maglia nella stagione
+    // Cerca atleta per maglia E squadra della partita
+    const squadraPartita = p.squadra || '';
     const atleta = atletiInMemoria.find(a =>
-      (a.stagioni||[]).some(s => s.stagione === p.stagione && parseInt(s.maglia) === maglia)
+      (a.stagioni||[]).some(s =>
+        s.stagione === p.stagione &&
+        parseInt(s.maglia) === maglia &&
+        (!squadraPartita || s.squadra === squadraPartita)
+      )
     );
     if (!atleta) continue;
 
@@ -4988,13 +4993,29 @@ function renderStatistichesStagionali() {
   // Aggrega statistiche da tutte le partite in memoria
   const aggregato = {}; // { atletaId: { gare, bat_tot, ... } }
 
+  const campiMedia = ['ric_pos','ric_prf','att_perc']; // questi si calcolano come media
   partitiInMemoria.forEach(p => {
     (p.statistiche||[]).forEach(s => {
-      if (!aggregato[s.id]) aggregato[s.id] = { gare: 0 };
+      if (!aggregato[s.id]) aggregato[s.id] = { gare: 0, _contMedia: {} };
       aggregato[s.id].gare++;
       STAT_CAMPI.forEach(c => {
-        aggregato[s.id][c] = (aggregato[s.id][c]||0) + (parseFloat(s[c])||0);
+        if (campiMedia.includes(c)) {
+          // Media pesata: somma solo se il valore è presente
+          if (parseFloat(s[c])) {
+            aggregato[s.id][c] = (aggregato[s.id][c]||0) + (parseFloat(s[c])||0);
+            aggregato[s.id]._contMedia[c] = (aggregato[s.id]._contMedia[c]||0) + 1;
+          }
+        } else {
+          aggregato[s.id][c] = (aggregato[s.id][c]||0) + (parseFloat(s[c])||0);
+        }
       });
+    });
+  });
+
+  // Calcola medie per i campi percentuale
+  Object.values(aggregato).forEach(a => {
+    campiMedia.forEach(c => {
+      if (a._contMedia[c]) a[c] = a[c] / a._contMedia[c];
     });
   });
 
