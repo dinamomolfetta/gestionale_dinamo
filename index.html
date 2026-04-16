@@ -1748,6 +1748,61 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 </div>
 
 
+
+<!-- MODAL DETTAGLIO ATLETA STATISTICHE -->
+<div class="modal-overlay" id="modal-dettaglio-atleta-stat">
+  <div class="modal" style="max-width:1050px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-titolo">
+      <div>
+        <div id="dettaglio-atleta-nome" style="font-size:18px;font-weight:800;color:var(--blu);"></div>
+        <div id="dettaglio-atleta-sub" style="font-size:12px;color:var(--testo-m);margin-top:2px;"></div>
+      </div>
+      <button class="modal-chiudi" onclick="chiudiDettaglioAtletaStat()">×</button>
+    </div>
+
+    <!-- KPI riepilogo -->
+    <div id="dettaglio-kpi" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;"></div>
+
+    <!-- Tabella partite -->
+    <div class="tabella-wrap" style="overflow-x:auto;">
+      <table style="font-size:12px;min-width:900px;width:100%;">
+        <thead>
+          <tr style="background:var(--blu);color:#fff;">
+            <th style="padding:8px;text-align:left;">Partita</th>
+            <th style="padding:8px;text-align:center;">Avversario</th>
+            <th style="padding:8px;text-align:center;">Ris.</th>
+            <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">BATTUTA</th>
+            <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
+            <th colspan="5" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
+            <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">MUR</th>
+            <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);color:var(--arancio);">PT</th>
+          </tr>
+          <tr style="background:var(--blu-l);font-size:11px;">
+            <th style="padding:6px 8px;"></th>
+            <th style="padding:6px;text-align:center;"></th>
+            <th style="padding:6px;text-align:center;"></th>
+            <th style="padding:6px;text-align:center;">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
+            <th style="padding:6px;text-align:center;">Ace</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
+            <th style="padding:6px;text-align:center;">Pos%</th>
+            <th style="padding:6px;text-align:center;">Prf%</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
+            <th style="padding:6px;text-align:center;">Mur</th>
+            <th style="padding:6px;text-align:center;">Pt</th>
+            <th style="padding:6px;text-align:center;">%</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);"></th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);font-weight:800;color:var(--arancio);"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-dettaglio-atleta-stat"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL STATISTICHE PARTITA -->
 <div class="modal-overlay" id="modal-stat-partita">
   <div class="modal" style="max-width:1000px;max-height:90vh;overflow-y:auto;">
@@ -5062,8 +5117,8 @@ function renderStatistichesStagionali() {
   };
 
   tbody.innerHTML = lista.map(a => `
-    <tr style="border-bottom:1px solid var(--grigio-m);">
-      <td style="padding:7px 8px;font-weight:600;">${a.nome}</td>
+    <tr style="border-bottom:1px solid var(--grigio-m);cursor:pointer;" onclick="apriDettaglioAtletaStat('${a.id}')" title="Clicca per vedere il dettaglio per partita">
+      <td style="padding:7px 8px;font-weight:600;color:var(--blu);">🔍 ${a.nome}</td>
       <td style="padding:7px 8px;text-align:center;"><span class="chip chip-blu">${a.gare}</span></td>
       <td style="padding:7px 8px;text-align:center;">${fmt(a.bat_tot)}</td>
       <td style="padding:7px 8px;text-align:center;color:var(--rosso);">${fmt(a.bat_err)}</td>
@@ -5108,6 +5163,124 @@ function impostaHaReferto(valore) {
   if (msgReferto) msgReferto.style.display = valore ? '' : 'none';
   if (wrapper) wrapper.style.display = !valore ? '' : 'none';
   if (!valore) renderPresenzaPartita();
+}
+
+
+// ============================================================
+// DETTAGLIO ATLETA STATISTICHE
+// ============================================================
+function apriDettaglioAtletaStat(atletaId) {
+  const atleta = atletiInMemoria.find(a => a.id === atletaId);
+  if (!atleta) return;
+
+  // Intestazione
+  const stagInfo = atleta.stagioni?.find(s => s.stagione === stagioneSel) || atleta.stagioni?.[0] || {};
+  document.getElementById('dettaglio-atleta-nome').textContent =
+    (stagInfo.maglia ? '#' + stagInfo.maglia + ' — ' : '') + atleta.cognome + ' ' + atleta.nome;
+  document.getElementById('dettaglio-atleta-sub').textContent =
+    [stagInfo.ruolo, stagInfo.squadra, stagioneSel].filter(Boolean).join(' · ');
+
+  // Raccogli partite con statistiche per questo atleta
+  const partiteConStat = partitiInMemoria
+    .map(p => {
+      const stat = (p.statistiche||[]).find(s => s.id === atletaId);
+      return stat ? { ...p, stat } : null;
+    })
+    .filter(Boolean)
+    .sort((a,b) => (a.data||'').localeCompare(b.data||''));
+
+  const fmt = (v, isPerc) => {
+    if (!v && v !== 0) return '<span style="color:var(--grigio-m);">—</span>';
+    if (v === 0) return '<span style="color:var(--grigio-m);">—</span>';
+    return isPerc ? v.toFixed(1)+'%' : Math.round(v);
+  };
+  const fmtRed = (v) => !v ? '<span style="color:var(--grigio-m);">—</span>' : `<span style="color:var(--rosso);">${Math.round(v)}</span>`;
+  const fmtGreen = (v) => !v ? '<span style="color:var(--grigio-m);">—</span>' : `<span style="color:var(--verde);font-weight:700;">${Math.round(v)}</span>`;
+
+  // KPI totali
+  const tot = { gare: partiteConStat.length, bat_tot:0, bat_err:0, bat_ace:0, ric_tot:0, ric_err:0, att_tot:0, att_pt:0, muro_pt:0, pt_tot:0, _ric_pos:0, _ric_prf:0, _att_perc:0, _cnt_ric:0, _cnt_att:0 };
+  partiteConStat.forEach(p => {
+    const s = p.stat;
+    tot.bat_tot  += parseFloat(s.bat_tot)||0;
+    tot.bat_err  += parseFloat(s.bat_err)||0;
+    tot.bat_ace  += parseFloat(s.bat_ace)||0;
+    tot.ric_tot  += parseFloat(s.ric_tot)||0;
+    tot.ric_err  += parseFloat(s.ric_err)||0;
+    tot.att_tot  += parseFloat(s.att_tot)||0;
+    tot.att_pt   += parseFloat(s.att_pt)||0;
+    tot.muro_pt  += parseFloat(s.muro_pt)||0;
+    tot.pt_tot   += parseFloat(s.pt_tot)||0;
+    if (parseFloat(s.ric_pos)) { tot._ric_pos += parseFloat(s.ric_pos); tot._cnt_ric++; }
+    if (parseFloat(s.ric_prf)) { tot._ric_prf += parseFloat(s.ric_prf); }
+    if (parseFloat(s.att_perc)) { tot._att_perc += parseFloat(s.att_perc); tot._cnt_att++; }
+  });
+
+  document.getElementById('dettaglio-kpi').innerHTML = `
+    <div class="kpi blu"><div class="kpi-val">${tot.gare}</div><div class="kpi-lab">Gare</div></div>
+    <div class="kpi verde"><div class="kpi-val">${Math.round(tot.pt_tot)}</div><div class="kpi-lab">Punti tot.</div></div>
+    <div class="kpi"><div class="kpi-val">${Math.round(tot.bat_ace)}</div><div class="kpi-lab">Ace</div></div>
+    <div class="kpi"><div class="kpi-val">${tot._cnt_ric ? (tot._ric_pos/tot._cnt_ric).toFixed(1)+'%' : '—'}</div><div class="kpi-lab">Ric. Pos%</div></div>
+    <div class="kpi"><div class="kpi-val">${Math.round(tot.att_pt)}</div><div class="kpi-lab">Pt attacco</div></div>
+    <div class="kpi" style="border-left-color:var(--arancio)"><div class="kpi-val">${Math.round(tot.muro_pt)}</div><div class="kpi-lab">Muri punto</div></div>
+  `;
+
+  // Righe partite
+  const tbody = document.getElementById('tbody-dettaglio-atleta-stat');
+  tbody.innerHTML = partiteConStat.map((p, i) => {
+    const s = p.stat;
+    const esito = p.esito === 'vittoria'
+      ? '<span class="chip chip-verde" style="font-size:10px;">V</span>'
+      : p.esito === 'sconfitta'
+      ? '<span class="chip chip-rosso" style="font-size:10px;">S</span>'
+      : '<span class="chip chip-grigio" style="font-size:10px;">P</span>';
+    return `<tr style="border-bottom:1px solid var(--grigio-m);${i%2===0?'':'background:rgba(27,42,107,0.02)'}">
+      <td style="padding:7px 8px;font-size:11px;color:var(--grigio-t);white-space:nowrap;">${p.numero?'#'+p.numero+' · ':''}${formatData(p.data)}</td>
+      <td style="padding:7px 8px;font-weight:600;">${p.avversario}</td>
+      <td style="padding:7px 8px;text-align:center;font-size:11px;">${p.set_dinamo}—${p.set_avversario} ${esito}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(s.bat_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmtRed(s.bat_err)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmtGreen(s.bat_ace)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">${fmt(s.ric_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmtRed(s.ric_err)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(s.ric_pos,true)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(s.ric_prf,true)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">${fmt(s.att_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmtRed(s.att_err)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(s.att_mur)}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:600;">${fmt(s.att_pt)}</td>
+      <td style="padding:7px 8px;text-align:center;">${fmt(s.att_perc,true)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);font-weight:600;">${fmt(s.muro_pt)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">
+        <span style="background:var(--arancio);color:#fff;font-weight:800;padding:2px 8px;border-radius:10px;">${Math.round(parseFloat(s.pt_tot)||0)}</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Riga totali
+  tbody.innerHTML += `<tr style="background:var(--blu);color:#fff;">
+    <td colspan="3" style="padding:9px 8px;font-weight:700;">TOTALE ${tot.gare} GARE</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_tot)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_err)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_ace)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.ric_tot)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.ric_err)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_ric?(tot._ric_pos/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_ric?(tot._ric_prf/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.att_tot)||'—'}</td>
+    <td colspan="2" style="padding:9px 8px;text-align:center;font-weight:700;"></td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.att_pt)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_att?(tot._att_perc/tot._cnt_att).toFixed(1)+'%':'—'}</td>
+    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.muro_pt)||'—'}</td>
+    <td style="padding:9px 8px;text-align:center;">
+      <span style="background:var(--arancio);color:#fff;font-weight:900;padding:3px 12px;border-radius:10px;font-size:15px;">${Math.round(tot.pt_tot)}</span>
+    </td>
+  </tr>`;
+
+  document.getElementById('modal-dettaglio-atleta-stat').classList.add('aperto');
+}
+
+function chiudiDettaglioAtletaStat() {
+  document.getElementById('modal-dettaglio-atleta-stat').classList.remove('aperto');
 }
 
 </script>
