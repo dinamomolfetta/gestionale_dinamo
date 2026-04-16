@@ -1498,7 +1498,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
       <!-- Totale statistiche stagionale -->
       <div class="card">
-        <div class="card-titolo"><span class="icona">📊</span> Totale statistiche stagionale</div>
+        <div class="card-titolo" style="display:flex;justify-content:space-between;align-items:center;">
+          <span><span class="icona">📊</span> Totale statistiche stagionale</span>
+          <button class="btn btn-secondario btn-piccolo" onclick="stampaTabellaStagionale()">🖨️ Stampa</button>
+        </div>
         <div class="tabella-wrap" style="overflow-x:auto;">
           <table id="tabella-stat-stagione" style="font-size:12px;min-width:900px;">
             <thead>
@@ -1757,7 +1760,10 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <div id="dettaglio-atleta-nome" style="font-size:18px;font-weight:800;color:var(--blu);"></div>
         <div id="dettaglio-atleta-sub" style="font-size:12px;color:var(--testo-m);margin-top:2px;"></div>
       </div>
-      <button class="modal-chiudi" onclick="chiudiDettaglioAtletaStat()">×</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-secondario btn-piccolo" onclick="stampaDettaglioAtleta()">🖨️ Stampa</button>
+        <button class="modal-chiudi" onclick="chiudiDettaglioAtletaStat()">×</button>
+      </div>
     </div>
 
     <!-- KPI riepilogo -->
@@ -5257,20 +5263,21 @@ function apriDettaglioAtletaStat(atletaId) {
   }).join('');
 
   // Riga totali
+  const tdBlu = 'padding:9px 8px;text-align:center;font-weight:700;color:#fff;';
   tbody.innerHTML += `<tr style="background:var(--blu);color:#fff;">
-    <td colspan="3" style="padding:9px 8px;font-weight:700;">TOTALE ${tot.gare} GARE</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_tot)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_err)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.bat_ace)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.ric_tot)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.ric_err)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_ric?(tot._ric_pos/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_ric?(tot._ric_prf/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.att_tot)||'—'}</td>
-    <td colspan="2" style="padding:9px 8px;text-align:center;font-weight:700;"></td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.att_pt)||'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${tot._cnt_att?(tot._att_perc/tot._cnt_att).toFixed(1)+'%':'—'}</td>
-    <td style="padding:9px 8px;text-align:center;font-weight:700;">${Math.round(tot.muro_pt)||'—'}</td>
+    <td colspan="3" style="padding:9px 8px;font-weight:700;color:#fff;">TOTALE ${tot.gare} GARE</td>
+    <td style="${tdBlu}">${Math.round(tot.bat_tot)||'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.bat_err)||'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.bat_ace)||'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.ric_tot)||'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.ric_err)||'—'}</td>
+    <td style="${tdBlu}">${tot._cnt_ric?(tot._ric_pos/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
+    <td style="${tdBlu}">${tot._cnt_ric?(tot._ric_prf/tot._cnt_ric).toFixed(1)+'%':'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.att_tot)||'—'}</td>
+    <td colspan="2" style="${tdBlu}"></td>
+    <td style="${tdBlu}">${Math.round(tot.att_pt)||'—'}</td>
+    <td style="${tdBlu}">${tot._cnt_att?(tot._att_perc/tot._cnt_att).toFixed(1)+'%':'—'}</td>
+    <td style="${tdBlu}">${Math.round(tot.muro_pt)||'—'}</td>
     <td style="padding:9px 8px;text-align:center;">
       <span style="background:var(--arancio);color:#fff;font-weight:900;padding:3px 12px;border-radius:10px;font-size:15px;">${Math.round(tot.pt_tot)}</span>
     </td>
@@ -5281,6 +5288,69 @@ function apriDettaglioAtletaStat(atletaId) {
 
 function chiudiDettaglioAtletaStat() {
   document.getElementById('modal-dettaglio-atleta-stat').classList.remove('aperto');
+}
+
+
+// ============================================================
+// STAMPA STATISTICHE
+// ============================================================
+function stampaTabellaStagionale() {
+  const titolo = 'Statistiche stagionali — ' + (stagioneSel || '');
+  const tabella = document.getElementById('tabella-stat-stagione');
+  if (!tabella) return;
+  apriFinestroStampa(titolo, tabella.outerHTML);
+}
+
+function stampaDettaglioAtleta() {
+  const nome = document.getElementById('dettaglio-atleta-nome')?.textContent || '';
+  const sub  = document.getElementById('dettaglio-atleta-sub')?.textContent || '';
+  const kpi  = document.getElementById('dettaglio-kpi')?.outerHTML || '';
+  const tab  = document.querySelector('#modal-dettaglio-atleta-stat .tabella-wrap table')?.outerHTML || '';
+  apriFinestroStampa(nome, kpi + tab, sub);
+}
+
+function apriFinestroStampa(titolo, corpo, sottotitolo) {
+  const w = window.open('', '_blank', 'width=1100,height=700');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>${titolo}</title>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; color: #111; }
+      h1 { font-size: 18px; color: #1B2A6B; margin-bottom: 4px; }
+      h2 { font-size: 13px; color: #666; margin-bottom: 16px; font-weight: normal; }
+      .logo { display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:2px solid #1B2A6B; padding-bottom:12px; }
+      .logo-testo { font-size:20px; font-weight:800; color:#1B2A6B; }
+      .logo-sub { font-size:12px; color:#F47920; font-weight:600; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th { background: #1B2A6B; color: #fff; padding: 6px 8px; text-align: center; font-size: 11px; }
+      td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; text-align: center; font-size: 11px; }
+      td:first-child { text-align: left; font-weight: 600; }
+      tr:nth-child(even) td { background: #f8f9ff; }
+      tr:last-child td { background: #1B2A6B; color: #fff; font-weight: 700; }
+      .chip { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; }
+      .chip-blu { background:#dde8ff; color:#1B2A6B; }
+      .chip-verde { background:#d4edda; color:#155724; }
+      .chip-rosso { background:#f8d7da; color:#721c24; }
+      .kpi-griglia { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:16px; }
+      .kpi { background:#f0f4ff; border-radius:8px; padding:10px; text-align:center; border-left:3px solid #1B2A6B; }
+      .kpi-val { font-size:20px; font-weight:800; color:#1B2A6B; }
+      .kpi-lab { font-size:10px; color:#666; text-transform:uppercase; margin-top:2px; }
+      @media print { body { padding:10px; } button { display:none; } }
+    </style>
+  </head><body>
+    <div class="logo">
+      <div>
+        <div class="logo-testo">ASD Pol. Dinamo Molfetta</div>
+        <div class="logo-sub">${titolo}</div>
+      </div>
+    </div>
+    ${sottotitolo ? '<h2>'+sottotitolo+'</h2>' : ''}
+    ${corpo}
+    <div style="margin-top:20px;font-size:10px;color:#999;">Stampato il ${new Date().toLocaleDateString('it-IT')} — Gestionale ASD Pol. Dinamo Molfetta</div>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 </script>
