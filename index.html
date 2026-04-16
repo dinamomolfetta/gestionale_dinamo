@@ -1490,8 +1490,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
                 <th style="padding:8px;text-align:left;">Atleta</th>
                 <th style="padding:8px;text-align:center;">Gare</th>
                 <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">BATTUTA</th>
-                <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
-                <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
+                <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
+                <th colspan="5" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
                 <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">MURO</th>
                 <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">PT TOT</th>
               </tr>
@@ -1501,10 +1501,12 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
                 <th style="padding:6px;text-align:center;">Tot</th>
                 <th style="padding:6px;text-align:center;">Err</th>
                 <th style="padding:6px;text-align:center;">Ace</th>
-                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+                <th style="padding:6px;text-align:center;">Err</th>
                 <th style="padding:6px;text-align:center;">Pos%</th>
                 <th style="padding:6px;text-align:center;">Prf%</th>
-                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+                <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+                <th style="padding:6px;text-align:center;">Err</th>
                 <th style="padding:6px;text-align:center;">Mur</th>
                 <th style="padding:6px;text-align:center;">Pt</th>
                 <th style="padding:6px;text-align:center;">%</th>
@@ -1752,8 +1754,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
           <tr style="background:var(--blu);color:#fff;">
             <th style="padding:8px;text-align:left;">Atleta</th>
             <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">BATTUTA</th>
-            <th colspan="3" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
-            <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
+            <th colspan="4" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">RICEZIONE</th>
+            <th colspan="5" style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">ATTACCO</th>
             <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">MURO</th>
             <th style="padding:8px;text-align:center;border-left:1px solid rgba(255,255,255,0.2);">PT TOT</th>
           </tr>
@@ -1762,10 +1764,12 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
             <th style="padding:6px;text-align:center;">Tot</th>
             <th style="padding:6px;text-align:center;">Err</th>
             <th style="padding:6px;text-align:center;">Ace</th>
-            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
             <th style="padding:6px;text-align:center;">Pos%</th>
             <th style="padding:6px;text-align:center;">Prf%</th>
-            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Err</th>
+            <th style="padding:6px;text-align:center;border-left:1px solid var(--grigio-m);">Tot</th>
+            <th style="padding:6px;text-align:center;">Err</th>
             <th style="padding:6px;text-align:center;">Mur</th>
             <th style="padding:6px;text-align:center;">Pt</th>
             <th style="padding:6px;text-align:center;">%</th>
@@ -4809,7 +4813,7 @@ async function eliminaDocumentoStaff() {
 let partitaStatId = null;
 let statisticheTemp = {}; // { atletaId: { bat_tot, bat_err, bat_ace, ric_err, ric_pos, ric_prf, att_err, att_mur, att_pt, att_perc, muro_pt, pt_tot } }
 
-const STAT_CAMPI = ['bat_tot','bat_err','bat_ace','ric_err','ric_pos','ric_prf','att_err','att_mur','att_pt','att_perc','muro_pt','pt_tot'];
+const STAT_CAMPI = ['bat_tot','bat_err','bat_ace','ric_tot','ric_err','ric_pos','ric_prf','att_tot','att_err','att_mur','att_pt','att_perc','muro_pt','pt_tot'];
 
 function apriStatistichePartita(id) {
   partitaStatId = id;
@@ -4944,23 +4948,24 @@ function parseRefertoStatistiche() {
     // 8:att_err  9:att_mur  10:att_pt  11:att_perc  12:att_(skip)
     // 13:muro_pt
     // Gestisce anche formati con meno colonne
+    // Struttura referto FIPAV:
+    // 0:pt_tot | 1:bat_tot 2:bat_err 3:bat_ace | 4:ric_tot 5:ric_err 6:ric_pos% 7:ric_prf% | 8:att_tot 9:att_err 10:att_mur 11:att_pt 12:att_perc | 13:muro_pt
     if (valori.length >= 8) {
       s.pt_tot   = valori[0] || 0;
       s.bat_tot  = valori[1] || 0;
       s.bat_err  = valori[2] || 0;
       s.bat_ace  = valori[3] || 0;
-      s.ric_err  = valori[4] || 0;
-      // valori[5] = colonna vuota ricezione, skippa
+      s.ric_tot  = valori.length > 4 ? valori[4] : 0;
+      s.ric_err  = valori.length > 5 ? valori[5] : 0;
       s.ric_pos  = valori.length > 6 ? valori[6] : 0;
       s.ric_prf  = valori.length > 7 ? valori[7] : 0;
-      s.att_err  = valori.length > 8 ? valori[8] : 0;
-      s.att_mur  = valori.length > 9 ? valori[9] : 0;
-      s.att_pt   = valori.length > 10 ? valori[10] : 0;
-      s.att_perc = valori.length > 11 ? valori[11] : 0;
-      // valori[12] = colonna vuota attacco, skippa
+      s.att_tot  = valori.length > 8 ? valori[8] : 0;
+      s.att_err  = valori.length > 9 ? valori[9] : 0;
+      s.att_mur  = valori.length > 10 ? valori[10] : 0;
+      s.att_pt   = valori.length > 11 ? valori[11] : 0;
+      s.att_perc = valori.length > 12 ? valori[12] : 0;
       s.muro_pt  = valori.length > 13 ? valori[13] : 0;
-      // Ricalcola pt_tot da ace+att_pt+muro se il valore parsato è 0
-      if (!s.pt_tot) s.pt_tot = s.bat_ace + s.att_pt + s.muro_pt;
+      if (!s.pt_tot) s.pt_tot = (s.bat_ace||0) + (s.att_pt||0) + (s.muro_pt||0);
     }
     importati++;
   }
@@ -5017,10 +5022,12 @@ function renderStatistichesStagionali() {
       <td style="padding:7px 8px;text-align:center;">${fmt(a.bat_tot)}</td>
       <td style="padding:7px 8px;text-align:center;color:var(--rosso);">${fmt(a.bat_err)}</td>
       <td style="padding:7px 8px;text-align:center;color:var(--verde);font-weight:600;">${fmt(a.bat_ace)}</td>
-      <td style="padding:7px 8px;text-align:center;color:var(--rosso);border-left:1px solid var(--grigio-m);">${fmt(a.ric_err)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">${fmt(a.ric_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--rosso);">${fmt(a.ric_err)}</td>
       <td style="padding:7px 8px;text-align:center;">${fmt(a.ric_pos,true)}</td>
       <td style="padding:7px 8px;text-align:center;">${fmt(a.ric_prf,true)}</td>
-      <td style="padding:7px 8px;text-align:center;color:var(--rosso);border-left:1px solid var(--grigio-m);">${fmt(a.att_err)}</td>
+      <td style="padding:7px 8px;text-align:center;border-left:1px solid var(--grigio-m);">${fmt(a.att_tot)}</td>
+      <td style="padding:7px 8px;text-align:center;color:var(--rosso);">${fmt(a.att_err)}</td>
       <td style="padding:7px 8px;text-align:center;">${fmt(a.att_mur)}</td>
       <td style="padding:7px 8px;text-align:center;font-weight:600;">${fmt(a.att_pt)}</td>
       <td style="padding:7px 8px;text-align:center;">${fmt(a.att_perc,true)}</td>
