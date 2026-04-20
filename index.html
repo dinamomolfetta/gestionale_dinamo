@@ -1003,6 +1003,15 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
   <header class="header">
     <img src="logo-dinamo.png" alt="Dinamo" class="header-logo" onerror="this.style.display='none'">
     <div class="header-titolo">ASD Pol. Dinamo <span>Molfetta</span></div>
+    <!-- Card prossimo compleanno -->
+    <div id="card-compleanno" style="display:none; align-items:center; gap:8px; padding:6px 14px; border-radius:20px; background:var(--blu-l); cursor:default; transition:background 0.3s;">
+      <span style="font-size:18px;">🎂</span>
+      <div style="line-height:1.3;">
+        <div id="card-compleanno-data" style="font-size:11px; font-weight:700; color:var(--blu);"></div>
+        <div id="card-compleanno-nome" style="font-size:12px; font-weight:600; color:var(--testo);"></div>
+      </div>
+    </div>
+
     <div class="header-utente">
       <strong id="home-nome">—</strong>
       <span id="home-badge-ruolo"></span>
@@ -2628,6 +2637,7 @@ function avviaListenersFirestore() {
     atletiInMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAtleti();
     aggiornaSelectSquadre();
+    aggiornaProssimoCompleanno();
   });
 
   // Sessioni presenze
@@ -5351,6 +5361,78 @@ function apriFinestroStampa(titolo, corpo, sottotitolo) {
     <script>window.onload=function(){window.print();}<\/script>
   </body></html>`);
   w.document.close();
+}
+
+
+// ============================================================
+// CARD PROSSIMO COMPLEANNO
+// ============================================================
+function aggiornaProssimoCompleanno() {
+  const card = document.getElementById('card-compleanno');
+  const cardData = document.getElementById('card-compleanno-data');
+  const cardNome = document.getElementById('card-compleanno-nome');
+  if (!card) return;
+
+  const oggi = new Date();
+  const oggiMese = oggi.getMonth() + 1;
+  const oggiGiorno = oggi.getDate();
+  const oggiAnno = oggi.getFullYear();
+
+  let prossimo = null;
+  let minimoGiorni = 999;
+
+  atletiInMemoria.forEach(a => {
+    if (!a.nascita) return;
+    const parts = a.nascita.split('-');
+    if (parts.length < 3) return;
+    const mese = parseInt(parts[1]);
+    const giorno = parseInt(parts[2]);
+
+    // Calcola giorni mancanti al prossimo compleanno
+    let complAnno = oggiAnno;
+    let dataCompl = new Date(complAnno, mese - 1, giorno);
+    if (dataCompl < oggi) {
+      complAnno++;
+      dataCompl = new Date(complAnno, mese - 1, giorno);
+    }
+    // Se è oggi
+    const isOggi = mese === oggiMese && giorno === oggiGiorno;
+    const diffMs = isOggi ? 0 : dataCompl - oggi;
+    const diffGiorni = isOggi ? 0 : Math.ceil(diffMs / (1000*60*60*24));
+
+    if (diffGiorni < minimoGiorni) {
+      minimoGiorni = diffGiorni;
+      prossimo = { atleta: a, mese, giorno, giorni: diffGiorni, isOggi };
+    }
+  });
+
+  if (!prossimo) { card.style.display = 'none'; return; }
+
+  const mesiIT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  const dataStr = prossimo.giorno + ' ' + mesiIT[prossimo.mese - 1];
+  const nomeStr = prossimo.atleta.cognome + ' ' + prossimo.atleta.nome;
+
+  cardData.textContent = prossimo.isOggi
+    ? '🎉 Oggi! — ' + dataStr
+    : dataStr + (prossimo.giorni === 1 ? ' — domani!' : ' — tra ' + prossimo.giorni + ' gg');
+  cardNome.textContent = nomeStr;
+
+  // Colori
+  if (prossimo.isOggi) {
+    card.style.background = 'var(--verde)';
+    cardData.style.color = '#fff';
+    cardNome.style.color = '#fff';
+  } else if (prossimo.giorni <= 7) {
+    card.style.background = '#fff3cd';
+    cardData.style.color = '#856404';
+    cardNome.style.color = '#856404';
+  } else {
+    card.style.background = 'var(--blu-l)';
+    cardData.style.color = 'var(--blu)';
+    cardNome.style.color = 'var(--testo)';
+  }
+
+  card.style.display = 'flex';
 }
 
 </script>
