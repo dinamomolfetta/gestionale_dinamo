@@ -1227,6 +1227,8 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </select>
         <button class="btn btn-secondario" id="btn-ordina-cognome" onclick="toggleOrdineCognome(this)">A↓ Ordina per cognome</button>
         <button class="btn btn-secondario" onclick="apriAssegnaStagione()">⚡ Assegna stagione</button>
+        <button class="btn btn-secondario" onclick="esportaAtletiExcel()">📤 Esporta Excel</button>
+        <button class="btn btn-secondario" onclick="apriExportExcel()">📤 Esporta Excel</button>
         <button class="btn btn-primario" id="btn-nuovo-atleta" onclick="apriModalAtleta()">➕ Nuovo atleta</button>
         <button class="btn btn-secondario" id="btn-nuovo-staff" onclick="apriModalStaff()">👔 Nuovo staff</button>
         <label style="cursor:pointer;">
@@ -2148,6 +2150,63 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <div style="background:var(--grigio-m);border-radius:10px;height:8px;overflow:hidden;">
         <div id="ass-progress-bar" style="background:var(--arancio);height:100%;width:0%;transition:width 0.3s;"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL EXPORT EXCEL ATLETI -->
+<div class="modal-overlay" id="modal-export-excel">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-titolo">
+      <span>📤 Esporta atleti in Excel</span>
+      <button class="modal-chiudi" onclick="chiudiExportExcel()">×</button>
+    </div>
+
+    <!-- Filtri -->
+    <div style="background:var(--grigio-s);border-radius:var(--raggio);padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:10px;">Filtri</div>
+      <div class="griglia-2">
+        <div class="campo-gruppo">
+          <label>Stagione</label>
+          <select class="campo" id="exp-stagione">
+            <option value="">Tutte le stagioni</option>
+            <option value="2017/2018">2017/2018</option>
+            <option value="2018/2019">2018/2019</option>
+            <option value="2019/2020">2019/2020</option>
+            <option value="2020/2021">2020/2021</option>
+            <option value="2021/2022">2021/2022</option>
+            <option value="2022/2023">2022/2023</option>
+            <option value="2023/2024">2023/2024</option>
+            <option value="2024/2025">2024/2025</option>
+            <option value="2025/2026" selected>2025/2026</option>
+            <option value="2026/2027">2026/2027</option>
+          </select>
+        </div>
+        <div class="campo-gruppo">
+          <label>Squadra</label>
+          <select class="campo" id="exp-squadra">
+            <option value="">Tutte le squadre</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selezione campi -->
+    <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:10px;">Campi da esportare</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;" id="exp-campi-lista"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--testo-m);" id="exp-counter">0 atleti selezionati</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondario btn-piccolo" onclick="selTuttiCampi(true)">Seleziona tutti</button>
+        <button class="btn btn-secondario btn-piccolo" onclick="selTuttiCampi(false)">Deseleziona tutti</button>
+      </div>
+    </div>
+
+    <div class="modal-azioni">
+      <button class="btn btn-secondario" onclick="chiudiExportExcel()">Annulla</button>
+      <button class="btn btn-primario" onclick="eseguiExportExcel()">📥 Scarica Excel</button>
     </div>
   </div>
 </div>
@@ -5434,6 +5493,123 @@ function aggiornaProssimoCompleanno() {
 
   card.style.display = 'flex';
 }
+
+
+// ============================================================
+// EXPORT EXCEL ATLETI
+// ============================================================
+const CAMPI_EXPORT = [
+  { id: 'cognome',       label: 'Cognome',          get: a => a.cognome||'' },
+  { id: 'nome',          label: 'Nome',              get: a => a.nome||'' },
+  { id: 'sesso',         label: 'Sesso',             get: a => a.sesso||'' },
+  { id: 'nascita',       label: 'Data di nascita',   get: a => a.nascita ? a.nascita.split('-').reverse().join('/') : '' },
+  { id: 'luogo_nascita', label: 'Luogo di nascita',  get: a => a.luogo_nascita||'' },
+  { id: 'cf',            label: 'Codice fiscale',    get: a => a.cf||'' },
+  { id: 'fipav',         label: 'Codice FIPAV',      get: a => a.fipav||'' },
+  { id: 'via',           label: 'Indirizzo',         get: a => a.via||'' },
+  { id: 'cap',           label: 'CAP',               get: a => a.cap||'' },
+  { id: 'citta',         label: 'Città',             get: a => a.citta||'' },
+  { id: 'pr',            label: 'Provincia',         get: a => a.pr||'' },
+  { id: 'telefono',      label: 'Telefono',          get: a => a.telefono||'' },
+  { id: 'email',         label: 'Email',             get: a => a.email||'' },
+  { id: 'cert',          label: 'Scad. cert. medico',get: a => a.cert ? a.cert.split('-').reverse().join('/') : '' },
+  { id: 'stagione',      label: 'Stagione',          get: (a,stag) => stag||'' },
+  { id: 'squadra',       label: 'Squadra',           get: (a,stag,sq) => sq||'' },
+  { id: 'ruolo',         label: 'Ruolo',             get: (a,stag,sq,ruolo) => ruolo||'' },
+  { id: 'maglia',        label: 'N° maglia',         get: (a,stag,sq,ruolo,maglia) => maglia||'' },
+];
+
+function apriExportExcel() {
+  // Popola squadre
+  const sq = [...new Set([...atletiInMemoria.map(a => a.squadra).filter(Boolean), ...squadreAttive])];
+  const selSq = document.getElementById('exp-squadra');
+  selSq.innerHTML = '<option value="">Tutte le squadre</option>' + sq.map(s => `<option>${s}</option>`).join('');
+
+  // Popola campi con checkbox
+  const div = document.getElementById('exp-campi-lista');
+  div.innerHTML = CAMPI_EXPORT.map(c => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:6px 10px;background:var(--grigio-s);border-radius:6px;">
+      <input type="checkbox" class="exp-campo-check" value="${c.id}" checked style="accent-color:var(--arancio);">
+      ${c.label}
+    </label>`).join('');
+
+  aggiornaCntExport();
+  document.getElementById('modal-export-excel').classList.add('aperto');
+}
+
+function chiudiExportExcel() {
+  document.getElementById('modal-export-excel').classList.remove('aperto');
+}
+
+function selTuttiCampi(val) {
+  document.querySelectorAll('.exp-campo-check').forEach(cb => cb.checked = val);
+}
+
+function aggiornaCntExport() {
+  const stagione = document.getElementById('exp-stagione')?.value || '';
+  const squadra  = document.getElementById('exp-squadra')?.value  || '';
+  let lista = [...atletiInMemoria];
+  if (stagione) lista = lista.filter(a => (a.stagioni||[]).some(s => s.stagione === stagione));
+  if (squadra)  lista = lista.filter(a => (a.stagioni||[]).some(s => s.squadra === squadra));
+  document.getElementById('exp-counter').textContent = lista.length + ' atleti da esportare';
+}
+
+// Aggiorna contatore al cambio filtri
+document.addEventListener('change', e => {
+  if (e.target.id === 'exp-stagione' || e.target.id === 'exp-squadra') aggiornaCntExport();
+});
+
+function eseguiExportExcel() {
+  const stagione = document.getElementById('exp-stagione')?.value || '';
+  const squadra  = document.getElementById('exp-squadra')?.value  || '';
+  const campiSel = [...document.querySelectorAll('.exp-campo-check:checked')].map(cb => cb.value);
+
+  if (!campiSel.length) { alert('Seleziona almeno un campo.'); return; }
+
+  // Filtra atleti
+  let lista = [...atletiInMemoria].sort((a,b) => (a.cognome||'').localeCompare(b.cognome||'','it'));
+  if (stagione) lista = lista.filter(a => (a.stagioni||[]).some(s => s.stagione === stagione));
+  if (squadra)  lista = lista.filter(a => (a.stagioni||[]).some(s => s.squadra === squadra));
+
+  if (!lista.length) { alert('Nessun atleta da esportare con i filtri selezionati.'); return; }
+
+  const campiAttivi = CAMPI_EXPORT.filter(c => campiSel.includes(c.id));
+
+  // Costruisci righe
+  const header = campiAttivi.map(c => c.label);
+  const righe = lista.map(a => {
+    // Trova info stagione
+    const stagInfo = stagione
+      ? (a.stagioni||[]).find(s => s.stagione === stagione)
+      : (a.stagioni||[])[0];
+    return campiAttivi.map(c => c.get(
+      a,
+      stagInfo?.stagione || '',
+      stagInfo?.squadra  || '',
+      stagInfo?.ruolo    || '',
+      stagInfo?.maglia   || ''
+    ));
+  });
+
+  // Genera CSV compatibile Excel con BOM UTF-8
+  const bom = '﻿';
+  const sep = ';';
+  const csv = bom + [header, ...righe]
+    .map(riga => riga.map(v => `"${String(v).replace(/"/g,'""')}"`).join(sep))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const dataOggi = new Date().toLocaleDateString('it-IT').split('/').join('-');
+  a.download = `atleti_dinamo_${stagione||'tutti'}_${dataOggi}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  chiudiExportExcel();
+}
+
+
 
 </script>
 </body>
