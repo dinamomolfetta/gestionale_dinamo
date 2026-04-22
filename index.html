@@ -1337,22 +1337,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         </div>
       </div>
 
-      <!-- Form nuova partita -->
-      <div class="card" id="form-partita-card">
-        <div class="card-titolo" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <span style="display:flex; align-items:center; gap:8px;"><span class="icona">➕</span> Registra partita</span>
-          <button class="btn btn-secondario btn-piccolo" onclick="toggleImportaReferto()">📋 Importa da testo referto</button>
-        </div>
-        <div id="import-box" style="display:none; margin-bottom:16px;">
-          <div class="campo-gruppo">
-            <label>Incolla qui il testo del referto</label>
-            <textarea class="campo" id="testo-referto" rows="6" placeholder="Incolla il testo copiato dal referto PDF..."></textarea>
-          </div>
-          <div style="margin-top:8px; display:flex; gap:8px;">
-            <button class="btn btn-primario btn-piccolo" onclick="parseReferto()">🔍 Analizza e precompila</button>
-            <button class="btn btn-secondario btn-piccolo" onclick="toggleImportaReferto()">Chiudi</button>
-          </div>
-          <div id="import-status" style="display:none; margin-top:8px; padding:10px 14px; border-radius:var(--raggio); font-size:13px;"></div>
+      <!-- Pulsante registra partita -->
+      <div style="margin-bottom:14px;">
+        <button class="btn btn-primario" onclick="toggleFormPartita()" id="btn-toggle-form-partita">➕ Registra nuova partita</button>
+      </div>
+
+      <!-- Form nuova partita (collassato di default) -->
+      <div class="card" id="form-partita-card" style="display:none;">
+        <div class="card-titolo" style="justify-content:space-between;">
+          <span><span class="icona">➕</span> Registra nuova partita</span>
+          <button class="btn btn-secondario btn-piccolo" onclick="toggleFormPartita()">✕ Chiudi</button>
         </div>
         <div style="display:grid; grid-template-columns:0.5fr 1fr 1fr 1fr; gap:10px;">
           <div class="campo-gruppo">
@@ -2409,6 +2403,55 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
   </div>
 </div>
 
+
+<!-- MODAL MIA SCHEDA (visitor) -->
+<div class="modal-overlay" id="modal-mia-scheda">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-titolo">
+      <span>✏️ La mia scheda</span>
+      <button class="modal-chiudi" onclick="chiudiMiaScheda()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--testo-m);margin-bottom:16px;">Puoi aggiornare i tuoi dati di contatto e residenza.</p>
+
+    <div class="griglia-2">
+      <div class="campo-gruppo">
+        <label>Telefono</label>
+        <input type="text" class="campo" id="mia-telefono" placeholder="Es. 333 1234567">
+      </div>
+      <div class="campo-gruppo">
+        <label>Email</label>
+        <input type="email" class="campo" id="mia-email" placeholder="email@esempio.com">
+      </div>
+    </div>
+    <div class="campo-gruppo" style="margin-top:10px;">
+      <label>Via / indirizzo</label>
+      <input type="text" class="campo" id="mia-via" placeholder="Via Roma, 1">
+    </div>
+    <div style="display:grid;grid-template-columns:0.6fr 1fr 0.4fr;gap:10px;margin-top:10px;">
+      <div class="campo-gruppo">
+        <label>CAP</label>
+        <input type="text" class="campo" id="mia-cap" maxlength="5">
+      </div>
+      <div class="campo-gruppo">
+        <label>Città</label>
+        <input type="text" class="campo" id="mia-citta">
+      </div>
+      <div class="campo-gruppo">
+        <label>PR</label>
+        <input type="text" class="campo" id="mia-pr" maxlength="2" style="text-transform:uppercase;">
+      </div>
+    </div>
+    <div class="campo-gruppo" style="margin-top:10px;">
+      <label>Note</label>
+      <input type="text" class="campo" id="mia-note" placeholder="Note libere">
+    </div>
+    <div class="modal-azioni">
+      <button class="btn btn-secondario" onclick="chiudiMiaScheda()">Annulla</button>
+      <button class="btn btn-primario" onclick="salvaMiaScheda()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ATLETA -->
 <div class="modal-overlay" id="modal-atleta">
   <div class="modal">
@@ -3020,7 +3063,7 @@ function renderAtleti(lista) {
       <div class="atleta-azioni" style="flex-direction:column;gap:4px;align-items:flex-end;">
         <div style="display:flex;gap:4px;">
           <button class="btn btn-secondario btn-piccolo" onclick="visualizzaAtleta('${a.id}')">👁️</button>
-          ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : ''}
+          ${pEdit ? `<button class="btn btn-secondario btn-piccolo" onclick="apriModalAtleta('${a.id}')">✏️</button>` : (eMiaScheda(a) ? `<button class="btn btn-piccolo" style="background:var(--arancio);color:#fff;border:none;" onclick="apriMiaScheda('${a.id}')">✏️ Mia scheda</button>` : '')}
           ${ruoloCorrente === 'admin' ? `<button class="btn btn-pericolo btn-piccolo" onclick="eliminaAtleta('${a.id}')">🗑️</button>` : ''}
         </div>
         <div style="display:flex;gap:4px;">
@@ -3426,6 +3469,11 @@ async function salvaPartita() {
   if (msg) msg.style.display = 'none';
   if (wrap) wrap.style.display = 'none';
   document.getElementById('par-stagione').value = stagioneSel || '2025/2026';
+  // Chiudi form dopo salvataggio
+  const formCard = document.getElementById('form-partita-card');
+  const btnForm = document.getElementById('btn-toggle-form-partita');
+  if (formCard) formCard.style.display = 'none';
+  if (btnForm) btnForm.textContent = '➕ Registra nuova partita';
   document.getElementById('par-set-d').value = '';
   document.getElementById('par-set-a').value = '';
   for (let i = 1; i <= 5; i++) {
@@ -3441,6 +3489,7 @@ async function salvaPartita() {
 function renderStatistiche() {
   const partite = partitiInMemoria;
   renderStatistichesStagionali();
+  renderCardCampionati(partite);
   const pg = partite.length;
   const vinte  = partite.filter(p => p.esito === 'vittoria').length;
   const perse  = partite.filter(p => p.esito === 'sconfitta').length;
@@ -5610,6 +5659,140 @@ function eseguiExportExcel() {
 }
 
 
+
+
+// ============================================================
+// MIA SCHEDA (visitor)
+// ============================================================
+let miaSchedaId = null;
+
+// Verifica se la scheda atleta appartiene all'utente corrente (per email o uid)
+function eMiaScheda(atleta) {
+  if (!utenteCorrente) return false;
+  if (ruoloCorrente !== 'visitor') return false;
+  // Confronta per email
+  const emailAtleta = (atleta.email || '').toLowerCase().trim();
+  const emailUtente = (utenteCorrente.email || '').toLowerCase().trim();
+  if (emailAtleta && emailUtente && emailAtleta === emailUtente) return true;
+  // Confronta per uid collegato
+  if (atleta.uid_utente && atleta.uid_utente === utenteCorrente.uid) return true;
+  return false;
+}
+
+function apriMiaScheda(id) {
+  miaSchedaId = id;
+  const a = atletiInMemoria.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('mia-telefono').value = a.telefono || '';
+  document.getElementById('mia-email').value = a.email || '';
+  document.getElementById('mia-via').value = a.via || '';
+  document.getElementById('mia-cap').value = a.cap || '';
+  document.getElementById('mia-citta').value = a.citta || '';
+  document.getElementById('mia-pr').value = a.pr || '';
+  document.getElementById('mia-note').value = a.note || '';
+  document.getElementById('modal-mia-scheda').classList.add('aperto');
+}
+
+function chiudiMiaScheda() {
+  document.getElementById('modal-mia-scheda').classList.remove('aperto');
+  miaSchedaId = null;
+}
+
+async function salvaMiaScheda() {
+  if (!miaSchedaId) return;
+  const btn = document.querySelector('#modal-mia-scheda .btn-primario');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvataggio...'; }
+  try {
+    await db.collection('atleti_dinamo').doc(miaSchedaId).update({
+      telefono: document.getElementById('mia-telefono').value.trim(),
+      email:    document.getElementById('mia-email').value.trim(),
+      via:      document.getElementById('mia-via').value.trim(),
+      cap:      document.getElementById('mia-cap').value.trim(),
+      citta:    document.getElementById('mia-citta').value.trim(),
+      pr:       document.getElementById('mia-pr').value.trim().toUpperCase(),
+      note:     document.getElementById('mia-note').value.trim(),
+      uid_utente: utenteCorrente.uid  // collega scheda all'utente per i prossimi accessi
+    });
+    chiudiMiaScheda();
+    mostraBadge('Scheda aggiornata!');
+  } catch(e) {
+    alert('Errore nel salvataggio: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salva'; }
+  }
+}
+
+
+// ============================================================
+// TOGGLE FORM PARTITA
+// ============================================================
+function toggleFormPartita() {
+  const form = document.getElementById('form-partita-card');
+  const btn  = document.getElementById('btn-toggle-form-partita');
+  if (!form) return;
+  const aperto = form.style.display !== 'none';
+  form.style.display = aperto ? 'none' : '';
+  if (btn) btn.textContent = aperto ? '➕ Registra nuova partita' : '✕ Chiudi form';
+  if (!aperto) {
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    aggiornaStagioneGara();
+  }
+}
+
+// ============================================================
+// CARD RIEPILOGO PER CAMPIONATO
+// ============================================================
+function renderCardCampionati(partite) {
+  const cont = document.getElementById('card-riepilogo-campionati');
+  if (!cont) return;
+
+  // Raggruppa per squadra+competizione
+  const gruppi = {};
+  partite.forEach(p => {
+    const chiave = (p.squadra || '—') + '|' + (p.competizione || '—');
+    if (!gruppi[chiave]) gruppi[chiave] = { squadra: p.squadra||'—', competizione: p.competizione||'—', pg:0, v:0, s:0, sv:0, sp:0 };
+    const g = gruppi[chiave];
+    if (p.esito) {
+      g.pg++;
+      if (p.esito === 'vittoria') g.v++; else g.s++;
+      g.sv += parseInt(p.set_dinamo)||0;
+      g.sp += parseInt(p.set_avversario)||0;
+    }
+  });
+
+  const lista = Object.values(gruppi).sort((a,b) => a.squadra.localeCompare(b.squadra,'it'));
+
+  cont.innerHTML = lista.map(g => {
+    const perc = g.pg ? Math.round(g.v/g.pg*100) : 0;
+    const colore = perc >= 50 ? 'var(--verde)' : 'var(--rosso)';
+    return `<div style="background:var(--bianco);border-radius:var(--raggio);padding:12px 16px;box-shadow:var(--ombra);border-left:4px solid ${colore};min-width:220px;flex:1;">
+      <div style="font-size:11px;font-weight:700;color:var(--grigio-t);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">${g.squadra}</div>
+      <div style="font-size:12px;color:var(--testo-m);margin-bottom:8px;">${g.competizione}</div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:var(--blu);">${g.pg}</div>
+          <div style="font-size:10px;color:var(--grigio-t);">GARE</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:var(--verde);">${g.v}</div>
+          <div style="font-size:10px;color:var(--grigio-t);">VINTE</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:800;color:var(--rosso);">${g.s}</div>
+          <div style="font-size:10px;color:var(--grigio-t);">PERSE</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--testo-m);">${g.sv}/${g.sp}</div>
+          <div style="font-size:10px;color:var(--grigio-t);">SET V/P</div>
+        </div>
+        <div style="text-align:center;margin-left:auto;">
+          <div style="font-size:20px;font-weight:900;color:${colore};">${perc}%</div>
+          <div style="font-size:10px;color:var(--grigio-t);">VITTORIE</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 </script>
 </body>
