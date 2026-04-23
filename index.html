@@ -1825,29 +1825,11 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <button class="modal-chiudi" onclick="chiudiStatistichePartita()">×</button>
     </div>
 
-    <!-- Import referto - TABS -->
+    <!-- Import referto -->
     <div style="background:var(--grigio-s);border-radius:var(--raggio);padding:14px;margin-bottom:16px;">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button id="tab-presenze-pdf" class="btn btn-primario btn-piccolo" onclick="switchTabReferto('pdf')">📄 Presenze da PDF</button>
-        <button id="tab-stat-testo" class="btn btn-secondario btn-piccolo" onclick="switchTabReferto('testo')">📋 Statistiche da testo</button>
-      </div>
-
-      <!-- Tab PDF presenze -->
-      <div id="tab-content-pdf">
-        <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📄 Carica PDF referto — rileva presenze automaticamente</div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <input type="file" id="input-pdf-referto" accept="application/pdf" style="font-size:13px;" onchange="caricaPdfReferto(this)">
-          <span id="pdf-stato" style="font-size:12px;color:var(--testo-m);"></span>
-        </div>
-        <div id="pdf-presenze-risultato" style="margin-top:10px;"></div>
-      </div>
-
-      <!-- Tab testo statistiche (nascosta) -->
-      <div id="tab-content-testo" style="display:none;">
-        <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📋 Importa da testo referto</div>
-        <textarea id="stat-referto-testo" class="campo" rows="5" placeholder="Incolla qui il testo del referto (solo la sezione Dinamo)..." style="font-family:monospace;font-size:12px;"></textarea>
-        <button class="btn btn-primario btn-piccolo" style="margin-top:8px;" onclick="parseRefertoStatistiche()">🔍 Importa statistiche</button>
-      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📋 Importa da testo referto</div>
+      <textarea id="stat-referto-testo" class="campo" rows="5" placeholder="Incolla qui il testo del referto (solo la sezione Dinamo)..." style="font-family:monospace;font-size:12px;"></textarea>
+      <button class="btn btn-primario btn-piccolo" style="margin-top:8px;" onclick="parseRefertoStatistiche()">🔍 Importa statistiche</button>
     </div>
 
     <!-- Tabella statistiche -->
