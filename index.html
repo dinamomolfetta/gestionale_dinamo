@@ -1825,11 +1825,29 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <button class="modal-chiudi" onclick="chiudiStatistichePartita()">×</button>
     </div>
 
-    <!-- Import referto -->
+    <!-- Import referto - TABS -->
     <div style="background:var(--grigio-s);border-radius:var(--raggio);padding:14px;margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📋 Importa da testo referto</div>
-      <textarea id="stat-referto-testo" class="campo" rows="5" placeholder="Incolla qui il testo del referto (solo la sezione Dinamo)..." style="font-family:monospace;font-size:12px;"></textarea>
-      <button class="btn btn-primario btn-piccolo" style="margin-top:8px;" onclick="parseRefertoStatistiche()">🔍 Importa statistiche</button>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="tab-presenze-pdf" class="btn btn-primario btn-piccolo" onclick="switchTabReferto('pdf')">📄 Presenze da PDF</button>
+        <button id="tab-stat-testo" class="btn btn-secondario btn-piccolo" onclick="switchTabReferto('testo')">📋 Statistiche da testo</button>
+      </div>
+
+      <!-- Tab PDF presenze -->
+      <div id="tab-content-pdf">
+        <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📄 Carica PDF referto — rileva presenze automaticamente</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <input type="file" id="input-pdf-referto" accept="application/pdf" style="font-size:13px;" onchange="caricaPdfReferto(this)">
+          <span id="pdf-stato" style="font-size:12px;color:var(--testo-m);"></span>
+        </div>
+        <div id="pdf-presenze-risultato" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- Tab testo statistiche (nascosta) -->
+      <div id="tab-content-testo" style="display:none;">
+        <div style="font-size:12px;font-weight:700;color:var(--blu);text-transform:uppercase;margin-bottom:8px;">📋 Importa da testo referto</div>
+        <textarea id="stat-referto-testo" class="campo" rows="5" placeholder="Incolla qui il testo del referto (solo la sezione Dinamo)..." style="font-family:monospace;font-size:12px;"></textarea>
+        <button class="btn btn-primario btn-piccolo" style="margin-top:8px;" onclick="parseRefertoStatistiche()">🔍 Importa statistiche</button>
+      </div>
     </div>
 
     <!-- Tabella statistiche -->
@@ -5795,6 +5813,181 @@ function renderCardCampionati(partite) {
       </div>
     </div>`;
   }).join('');
+}
+
+
+// ============================================================
+// IMPORT PDF REFERTO — PRESENZE
+// ============================================================
+
+function switchTabReferto(tab) {
+  const pdf = document.getElementById('tab-content-pdf');
+  const testo = document.getElementById('tab-content-testo');
+  const btnPdf = document.getElementById('tab-presenze-pdf');
+  const btnTesto = document.getElementById('tab-stat-testo');
+  if (tab === 'pdf') {
+    pdf.style.display = ''; testo.style.display = 'none';
+    btnPdf.className = 'btn btn-primario btn-piccolo';
+    btnTesto.className = 'btn btn-secondario btn-piccolo';
+  } else {
+    pdf.style.display = 'none'; testo.style.display = '';
+    btnPdf.className = 'btn btn-secondario btn-piccolo';
+    btnTesto.className = 'btn btn-primario btn-piccolo';
+  }
+}
+
+async function caricaPdfReferto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const stato = document.getElementById('pdf-stato');
+  const risultato = document.getElementById('pdf-presenze-risultato');
+  stato.textContent = '⏳ Lettura PDF in corso...';
+  risultato.innerHTML = '';
+
+  try {
+    // Leggi PDF come base64
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    // Trova la partita corrente e la squadra Dinamo
+    const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
+    const squadraDinamo = p?.squadra || 'Dinamo';
+
+    stato.textContent = '🤖 Analisi AI in corso...';
+
+    const prompt = `Questo è un referto di pallavolo. Devo sapere SOLO le giocatrici/giocatori della squadra DINAMO CAB MOLFETTA (o DINAMO MOLFETTA) che sono effettivamente scesi in campo.
+
+Per determinare chi è sceso in campo guarda:
+1. Le formazioni iniziali dei set (i numeri dei titolari)
+2. Le sostituzioni (i numeri dei giocatori entrati)
+3. Considera anche i liberi (L1, L2) se hanno giocato
+
+NON includere chi era solo in panchina senza mai entrare.
+
+Rispondi SOLO con un JSON array di oggetti così:
+[{"numero": 1, "nome": "COGNOME NOME"}, {"numero": 6, "nome": "COGNOME NOME"}, ...]
+
+Includi solo i giocatori della DINAMO che hanno effettivamente giocato. Nessun altro testo.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const testo = data.content?.find(c => c.type === 'text')?.text || '';
+
+    // Parsa JSON
+    let giocatori = [];
+    try {
+      const clean = testo.replace(/```json|```/g, '').trim();
+      giocatori = JSON.parse(clean);
+    } catch(e) {
+      stato.textContent = '❌ Errore nel parsing della risposta AI';
+      risultato.innerHTML = `<pre style="font-size:11px;color:var(--rosso);">${testo}</pre>`;
+      return;
+    }
+
+    stato.textContent = `✅ Trovati ${giocatori.length} giocatori in campo`;
+
+    // Mostra risultato con possibilità di conferma
+    risultato.innerHTML = `
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--testo-m);margin-bottom:8px;">Giocatori rilevati — conferma o modifica:</div>
+        <div id="lista-presenze-pdf" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          ${giocatori.map(g => `
+            <label style="display:flex;align-items:center;gap:4px;background:var(--bianco);border:1px solid var(--grigio-m);border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" checked data-numero="${g.numero}" data-nome="${g.nome}">
+              <span style="color:var(--arancio);font-weight:700;">#${g.numero}</span> ${g.nome}
+            </label>
+          `).join('')}
+        </div>
+        <button class="btn btn-primario btn-piccolo" onclick="salvaPresenzeDaPdf()">💾 Salva presenze</button>
+      </div>`;
+
+  } catch(e) {
+    stato.textContent = '❌ Errore: ' + e.message;
+  }
+}
+
+async function salvaPresenzeDaPdf() {
+  const p = partitiInMemoria.find(x => x.id === partitaStatId) || tutteLePartite.find(x => x.id === partitaStatId);
+  if (!p) return;
+
+  // Raccogli giocatori selezionati
+  const checks = document.querySelectorAll('#lista-presenze-pdf input[type=checkbox]:checked');
+  const selezionati = Array.from(checks).map(c => ({
+    numero: parseInt(c.dataset.numero),
+    nome: c.dataset.nome
+  }));
+
+  if (!selezionati.length) { alert('Nessun giocatore selezionato'); return; }
+
+  // Abbina ai record atleti in memoria per stagione/squadra
+  const atletiPartita = selezionati.map(sel => {
+    // Cerca per numero maglia nella stagione della partita
+    const atleta = atletiInMemoria.find(a => {
+      const stag = a.stagioni?.find(s => s.stagione === p.stagione && s.squadra === p.squadra);
+      return stag && String(stag.maglia) === String(sel.numero);
+    });
+    return {
+      id: atleta?.id || 'pdf_' + sel.numero,
+      nome: atleta ? `${atleta.cognome} ${atleta.nome}` : sel.nome,
+      numero: sel.numero,
+      trovato: !!atleta
+    };
+  });
+
+  // Aggiorna giocatori della partita su Firestore
+  const giocatoriEsistenti = p.giocatori || [];
+  const nuoviIds = atletiPartita.map(a => a.id);
+
+  // Aggiungi solo quelli non già presenti
+  const daAggiungere = atletiPartita.filter(a => !giocatoriEsistenti.find(g => g.id === a.id));
+  const giocatoriAggiornati = [
+    ...giocatoriEsistenti,
+    ...daAggiungere.map(a => ({ id: a.id, nome: a.nome, numero: a.numero }))
+  ];
+
+  const btn = document.querySelector('#pdf-presenze-risultato .btn-primario');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvataggio...'; }
+
+  try {
+    await db.collection('partite_dinamo').doc(partitaStatId).update({ giocatori: giocatoriAggiornati });
+
+    // Aggiorna in memoria
+    const idx = partitiInMemoria.findIndex(x => x.id === partitaStatId);
+    if (idx >= 0) partitiInMemoria[idx].giocatori = giocatoriAggiornati;
+
+    // Mostra riepilogo
+    const nonTrovati = atletiPartita.filter(a => !a.trovato);
+    let msg = `✅ Salvate ${daAggiungere.length} presenze!`;
+    if (nonTrovati.length) msg += ` (${nonTrovati.length} non abbinati ad atleti in archivio)`;
+    document.getElementById('pdf-stato').textContent = msg;
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Salvato!'; }
+
+    // Ricarica tabella statistiche
+    renderTabellaStatPartita({ ...p, giocatori: giocatoriAggiornati });
+
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salva presenze'; }
+    alert('Errore: ' + e.message);
+  }
 }
 
 </script>
