@@ -3568,7 +3568,11 @@ function renderTabellaPartite(partite) {
       righe += `<tr style="border-bottom:1px solid var(--grigio-m);">
         <td style="padding:8px 12px;color:var(--grigio-t);font-size:12px;">${p.numero ? '#'+p.numero : '—'}</td>
         <td style="padding:8px 12px;">${formatData(p.data)}</td>
-        <td><strong>${p.avversario}</strong></td>
+        <td>
+          <strong>${p.avversario}</strong>
+          ${(p.giocatori||[]).length > 0 ? '<span title="Presenze inserite" style="margin-left:5px;font-size:11px;background:var(--blu);color:#fff;border-radius:20px;padding:1px 6px;">👥</span>' : ''}
+          ${(p.statistiche||[]).length > 0 ? '<span title="Statistiche inserite" style="margin-left:3px;font-size:11px;background:var(--arancio);color:#fff;border-radius:20px;padding:1px 6px;">📊</span>' : ''}
+        </td>
         <td><span class="chip ${p.luogo==='casa'?'chip-blu':'chip-grigio'}">${p.luogo==='casa'?'Casa':'Trasferta'}</span></td>
         <td>${p.competizione||'—'}</td>
         <td style="font-weight:700;">${p.set_dinamo} — ${p.set_avversario}</td>
