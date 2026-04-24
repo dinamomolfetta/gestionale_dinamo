@@ -6074,18 +6074,22 @@ function tabellaPresenzeHTML(atleti) {
       </tr>
     </thead>
     <tbody>
-      ${atleti.map((a,i) => `
+      ${atleti.map((a,i) => {
+        const stagione = document.getElementById('filtro-stagione-gare')?.value || stagioneSel || '2025/2026';
+        const atletaArch = atletiInMemoria.find(x => x.id === a.id);
+        const magliaStagione = atletaArch?.stagioni?.find(s => s.stagione === stagione)?.maglia;
+        const maglia = magliaStagione || a.numero || '—';
+        return `
         <tr style="border-bottom:1px solid var(--grigio-m);${i%2===0?'background:var(--grigio-s)':''}" title="${a.dettaglio.join('\n')}">
-          <td style="padding:8px;">
-            <span style="color:var(--arancio);font-weight:700;margin-right:6px;">#${a.numero||'—'}</span>${a.nome}
-          </td>
+          <td style="padding:8px;"><span style="color:var(--arancio);font-weight:700;margin-right:6px;">#${maglia}</span>${a.nome}</td>
           <td style="padding:8px;text-align:center;font-weight:800;color:var(--blu);font-size:16px;">${a.count}</td>
           <td style="padding:8px;">
             <div style="background:var(--grigio-m);border-radius:20px;height:8px;width:100%;max-width:200px;">
               <div style="background:var(--arancio);height:8px;border-radius:20px;width:${Math.round(a.count/maxP*100)}%;"></div>
             </div>
           </td>
-        </tr>`).join('')}
+        </tr>`;
+      }).join('')}
     </tbody>
   </table>`;
 }
