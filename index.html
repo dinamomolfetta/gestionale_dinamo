@@ -4371,7 +4371,8 @@ function renderHomePresenze() {
 
   // Usa tutte le partite (non filtrate per stagione)
   const tuttePartite = tutteLePartite.length ? tutteLePartite : partitiInMemoria;
-  const stagioni = [...new Set(tuttePartite.map(p => p.stagione).filter(Boolean))].sort();
+  const tutteStag = [...new Set(tuttePartite.map(p => p.stagione).filter(Boolean))].sort();
+  const stagioni = tutteStag.filter(s => s >= '2022/2023');
 
   if (!tuttePartite.length) {
     vuoto.style.display = '';
