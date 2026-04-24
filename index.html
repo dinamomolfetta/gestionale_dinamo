@@ -1340,9 +1340,26 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
       <!-- Card riepilogo per campionato -->
       <div id="card-riepilogo-campionati" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;"></div>
 
-      <!-- Pulsante registra partita -->
-      <div style="margin-bottom:14px;">
+      <!-- Pulsanti azione -->
+      <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primario" onclick="toggleFormPartita()" id="btn-toggle-form-partita">➕ Registra nuova partita</button>
+        <button class="btn btn-secondario" onclick="toggleRiepilogoPresenze()" id="btn-presenze-gare">👥 Presenze</button>
+      </div>
+
+      <!-- Riepilogo presenze (collassato di default) -->
+      <div id="sezione-presenze-gare" style="display:none;margin-bottom:16px;">
+        <div class="card">
+          <div class="card-titolo" style="justify-content:space-between;">
+            <span>👥 Presenze per squadra</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="presenze-filtro-squadra" class="campo" style="width:auto;padding:4px 8px;font-size:13px;" onchange="renderRiepilogoPresenze()">
+                <option value="">Tutte le squadre</option>
+              </select>
+              <button class="btn btn-secondario btn-piccolo" onclick="toggleRiepilogoPresenze()">✕ Chiudi</button>
+            </div>
+          </div>
+          <div id="tabella-presenze-gare" style="margin-top:12px;overflow-x:auto;"></div>
+        </div>
       </div>
 
       <!-- Form nuova partita (collassato di default) -->
@@ -3493,6 +3510,7 @@ function renderStatistiche() {
   const partite = partitiInMemoria;
   renderStatistichesStagionali();
   renderCardCampionati(partite);
+  if (document.getElementById("sezione-presenze-gare")?.style.display !== "none") renderRiepilogoPresenze();
   const pg = partite.length;
   const vinte  = partite.filter(p => p.esito === 'vittoria').length;
   const perse  = partite.filter(p => p.esito === 'sconfitta').length;
@@ -5970,6 +5988,106 @@ async function salvaPresenzeDaPdf() {
     if (btn) { btn.disabled = false; btn.textContent = '💾 Salva presenze'; }
     alert('Errore: ' + e.message);
   }
+}
+
+
+// ============================================================
+// RIEPILOGO PRESENZE GARE
+// ============================================================
+function toggleRiepilogoPresenze() {
+  const sez = document.getElementById('sezione-presenze-gare');
+  const btn = document.getElementById('btn-presenze-gare');
+  const aperto = sez.style.display !== 'none';
+  sez.style.display = aperto ? 'none' : '';
+  btn.textContent = aperto ? '👥 Presenze' : '👥 Presenze ▲';
+  if (!aperto) renderRiepilogoPresenze();
+}
+
+function renderRiepilogoPresenze() {
+  const stagione = document.getElementById('filtro-stagione-gare')?.value || stagioneSel || '2025/2026';
+  const squadraFiltro = document.getElementById('presenze-filtro-squadra')?.value || '';
+
+  // Prendi tutte le partite della stagione (anche da tutteLePartite)
+  const tuttePartite = [...(tutteLePartite || []), ...(partitiInMemoria || [])];
+  const uniche = [...new Map(tuttePartite.map(p => [p.id, p])).values()];
+  const partiteStagione = uniche.filter(p => p.stagione === stagione);
+
+  // Popola select squadre
+  const squadre = [...new Set(partiteStagione.map(p => p.squadra).filter(Boolean))].sort();
+  const sel = document.getElementById('presenze-filtro-squadra');
+  const valAttuale = sel.value;
+  sel.innerHTML = '<option value="">Tutte le squadre</option>' +
+    squadre.map(s => `<option value="${s}" ${s===valAttuale?'selected':''}>${s}</option>`).join('');
+
+  // Filtra per squadra se selezionata
+  const partite = squadraFiltro
+    ? partiteStagione.filter(p => p.squadra === squadraFiltro)
+    : partiteStagione;
+
+  // Conta presenze per atleta
+  const presenze = {}; // id -> {nome, numero, squadra, count, partite[]}
+  partite.forEach(p => {
+    (p.giocatori || []).forEach(g => {
+      if (!g.id || g.id.startsWith('_')) return; // salta ID fittizi
+      if (!presenze[g.id]) {
+        presenze[g.id] = { id: g.id, nome: g.nome, numero: g.numero, squadra: p.squadra, count: 0, dettaglio: [] };
+      }
+      presenze[g.id].count++;
+      presenze[g.id].dettaglio.push(`#${p.numero} ${p.avversario} (${formatData(p.data)})`);
+    });
+  });
+
+  const lista = Object.values(presenze).sort((a,b) => b.count - a.count || a.nome.localeCompare(b.nome,'it'));
+
+  const cont = document.getElementById('tabella-presenze-gare');
+
+  if (!lista.length) {
+    cont.innerHTML = '<p style="color:var(--testo-m);font-size:13px;padding:10px 0;">Nessuna presenza registrata per questa stagione/squadra.</p>';
+    return;
+  }
+
+  // Raggruppa per squadra se "tutte"
+  if (!squadraFiltro) {
+    const perSquadra = {};
+    lista.forEach(a => {
+      if (!perSquadra[a.squadra]) perSquadra[a.squadra] = [];
+      perSquadra[a.squadra].push(a);
+    });
+    cont.innerHTML = Object.entries(perSquadra).map(([sq, atleti]) => `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--bianco);background:var(--blu);padding:6px 12px;border-radius:var(--raggio) var(--raggio) 0 0;">${sq}</div>
+        ${tabellaPresenzeHTML(atleti)}
+      </div>`).join('');
+  } else {
+    cont.innerHTML = tabellaPresenzeHTML(lista);
+  }
+}
+
+function tabellaPresenzeHTML(atleti) {
+  const maxP = atleti[0]?.count || 1;
+  return `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="background:var(--grigio-s);">
+        <th style="padding:8px;text-align:left;">Atleta</th>
+        <th style="padding:8px;text-align:center;width:60px;">Pres.</th>
+        <th style="padding:8px;text-align:left;">Progressivo</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${atleti.map((a,i) => `
+        <tr style="border-bottom:1px solid var(--grigio-m);${i%2===0?'background:var(--grigio-s)':''}" title="${a.dettaglio.join('\n')}">
+          <td style="padding:8px;">
+            <span style="color:var(--arancio);font-weight:700;margin-right:6px;">#${a.numero||'—'}</span>${a.nome}
+          </td>
+          <td style="padding:8px;text-align:center;font-weight:800;color:var(--blu);font-size:16px;">${a.count}</td>
+          <td style="padding:8px;">
+            <div style="background:var(--grigio-m);border-radius:20px;height:8px;width:100%;max-width:200px;">
+              <div style="background:var(--arancio);height:8px;border-radius:20px;width:${Math.round(a.count/maxP*100)}%;"></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
 }
 
 </script>
