@@ -1037,7 +1037,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
       <!-- Card Presenze -->
       <div class="card-atleti" onclick="apriHomePresenze()" style="margin-bottom:0; background:var(--blu-m);">
-        <span class="card-atleti-icon" style="font-size:32px;">📊</span>
+        <span class="card-atleti-icon" style="font-size:32px;">📋</span>
         <div class="card-atleti-testo">
           <div class="card-atleti-titolo" style="font-size:17px;">Presenze</div>
           <div class="card-atleti-sub">Statistiche per stagione</div>
@@ -1045,6 +1045,16 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <div class="card-atleti-badge" id="home-num-presenze" style="background:var(--arancio);">0</div>
       </div>
 
+    </div>
+
+    <!-- Card Statistiche Generali -->
+    <div class="card-atleti" onclick="apriStatisticheGenerali()" style="margin-bottom:14px; background:linear-gradient(135deg,var(--blu) 0%,#2d4a8a 100%); cursor:pointer;">
+      <span class="card-atleti-icon" style="font-size:32px;">📊</span>
+      <div class="card-atleti-testo">
+        <div class="card-atleti-titolo" style="font-size:17px; color:#fff;">Statistiche Generali</div>
+        <div class="card-atleti-sub" style="color:rgba(255,255,255,0.7);">Riepilogo completo del club</div>
+      </div>
+      <div class="card-atleti-badge" style="background:var(--arancio);">→</div>
     </div>
 
     <!-- Card stagioni -->
@@ -5514,7 +5524,19 @@ function apriFinestroStampa(titolo, corpo, sottotitolo) {
     ${corpo}
     <div style="margin-top:20px;font-size:10px;color:#999;">Stampato il ${new Date().toLocaleDateString('it-IT')} — Gestionale ASD Pol. Dinamo Molfetta</div>
     <script>window.onload=function(){window.print();}<\/script>
-  </body></html>`);
+  
+<!-- MODAL STATISTICHE GENERALI -->
+<div id="modal-stat-generali" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;padding:20px;">
+  <div style="background:var(--bianco);border-radius:var(--raggio);max-width:900px;margin:0 auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:800;color:var(--blu);">📊 Statistiche Generali — ASD Pol. Dinamo Molfetta</div>
+      <button class="btn btn-secondario btn-piccolo" onclick="chiudiStatisticheGenerali()">✕ Chiudi</button>
+    </div>
+    <div id="stat-generali-contenuto"></div>
+  </div>
+</div>
+
+</body></html>`);
   w.document.close();
 }
 
@@ -6121,5 +6143,17 @@ function tabellaPresenzeHTML(atleti) {
 }
 
 </script>
+
+<!-- MODAL STATISTICHE GENERALI -->
+<div id="modal-stat-generali" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;padding:20px;">
+  <div style="background:var(--bianco);border-radius:var(--raggio);max-width:900px;margin:0 auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:800;color:var(--blu);">📊 Statistiche Generali — ASD Pol. Dinamo Molfetta</div>
+      <button class="btn btn-secondario btn-piccolo" onclick="chiudiStatisticheGenerali()">✕ Chiudi</button>
+    </div>
+    <div id="stat-generali-contenuto"></div>
+  </div>
+</div>
+
 </body>
 </html>
