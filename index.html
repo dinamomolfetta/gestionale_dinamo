@@ -3068,14 +3068,35 @@ function renderAtleti(lista) {
       <div class="atleta-info">
         <div class="atleta-nome">${a.cognome} ${a.nome}</div>
         <div class="atleta-meta" style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">
-          ${(a.stagioni&&a.stagioni.length ? a.stagioni : []).sort((x,y)=>y.stagione.localeCompare(x.stagione)).map(s =>
-            `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-              <span style="background:var(--blu-l);color:var(--blu);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;min-width:72px;text-align:center;">${s.stagione}</span>
-              ${s.maglia ? `<span style="color:var(--arancio);font-weight:700;font-size:11px;">#${s.maglia}</span>` : ''}
-              <span style="color:var(--testo-m);">${s.squadra||'—'}</span>
-              ${s.ruolo ? `<span style="color:var(--grigio-t);">· ${s.ruolo}</span>` : ''}
-            </div>`
-          ).join('')}
+          ${(() => {
+            const stagioni = (a.stagioni&&a.stagioni.length ? a.stagioni : []).sort((x,y)=>y.stagione.localeCompare(x.stagione));
+            // Calcola presenze per stagione e totale (dalla 2022/2023)
+            const tutteP = typeof tutteLePartite !== 'undefined' ? [...(tutteLePartite||[]),...(partitiInMemoria||[])] : (partitiInMemoria||[]);
+            const uniche = [...new Map(tutteP.map(p=>[p.id,p])).values()];
+            const presStagione = {};
+            let totalePresenze = 0;
+            uniche.forEach(p => {
+              if (!p.stagione || p.stagione < '2022/2023') return;
+              (p.giocatori||[]).forEach(g => {
+                if (g.id === a.id) {
+                  presStagione[p.stagione] = (presStagione[p.stagione]||0) + 1;
+                  totalePresenze++;
+                }
+              });
+            });
+            const righe = stagioni.map(s => {
+              const pres = presStagione[s.stagione];
+              return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                <span style="background:var(--blu-l);color:var(--blu);font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;min-width:72px;text-align:center;">${s.stagione}</span>
+                ${s.maglia ? `<span style="color:var(--arancio);font-weight:700;font-size:11px;">#${s.maglia}</span>` : ''}
+                <span style="color:var(--testo-m);">${s.squadra||'—'}</span>
+                ${s.ruolo ? `<span style="color:var(--grigio-t);">· ${s.ruolo}</span>` : ''}
+                ${pres ? `<span style="margin-left:auto;background:var(--arancio);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;" title="Presenze ${s.stagione}">▶ ${pres}</span>` : ''}
+              </div>`;
+            }).join('');
+            const totBadge = totalePresenze > 0 ? `<div style="margin-top:5px;font-size:11px;color:var(--testo-m);">Presenze totali (dal 2022/23): <strong style="color:var(--blu);">${totalePresenze}</strong></div>` : '';
+            return righe + totBadge;
+          })()}
           ${!a.stagioni||!a.stagioni.length ? `<span style="color:var(--grigio-t);font-size:12px;">Nessuna stagione registrata</span>` : ''}
         </div>
         ${a.cert ? `<div style="font-size:11px;color:${a.cert < oggi ? 'var(--rosso)' : 'var(--grigio-t)'}; margin-top:3px;">Cert. medico: ${formatData(a.cert)}${a.cert < oggi ? ' ⚠️ scaduto' : ''}</div>` : ''}
