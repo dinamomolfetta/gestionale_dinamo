@@ -3632,13 +3632,19 @@ function renderRosa(partite) {
   const thStag = document.getElementById('rosa-stagioni-headers');
   if (thStag) thStag.innerHTML = stagioni.map(s => `<th style="font-size:11px;">${s}</th>`).join('');
 
-  // Conta presenze per atleta per stagione
-  const conteggio = {}; // { atletaId: { stagione: count } }
+  // Conta presenze per atleta per stagione E per squadra
+  const conteggio = {}; // { atletaId: { nome, stagione: count, 'stagione||squadra': count } }
   partitiInMemoria.forEach(p => {
     (p.giocatori||[]).forEach(g => {
+      if (!g.id) return;
       if (!conteggio[g.id]) conteggio[g.id] = { nome: g.nome };
       const stag = p.stagione || '—';
+      const squadra = p.squadra || '—';
+      // Totale per stagione
       conteggio[g.id][stag] = (conteggio[g.id][stag] || 0) + 1;
+      // Dettaglio per stagione+squadra
+      const key = stag + '||' + squadra;
+      conteggio[g.id][key] = (conteggio[g.id][key] || 0) + 1;
     });
   });
 
@@ -3646,11 +3652,32 @@ function renderRosa(partite) {
   const tutti = Object.entries(conteggio).map(([id, dati]) => {
     const atleta = atletiInMemoria.find(a => a.id === id);
     const totale = stagioni.reduce((s, st) => s + (dati[st] || 0), 0);
-    const stagInfo = atleta?.stagioni?.[0] || {};
+
+    // Presenze per stagione con eventuale dettaglio per campionato
+    const presenzeStagioni = stagioni.map(st => {
+      const n = dati[st] || 0;
+      // Trova squadre in cui ha giocato in questa stagione
+      const squadreKeys = Object.keys(dati).filter(k => k.startsWith(st + '||'));
+      let dettaglio = null;
+      if (squadreKeys.length > 1) {
+        dettaglio = squadreKeys.map(k => {
+          const sq = k.split('||')[1];
+          return `${sq}: ${dati[k]}`;
+        }).join('\n');
+      }
+      return { n, dettaglio };
+    });
+
+    // Ruolo: cerca nella stagione più recente
+    const stagioneCorrente = stagioni[stagioni.length - 1];
+    const stagInfoList = atleta?.stagioni?.filter(s => s.stagione === stagioneCorrente) || [];
+    const ruolo = stagInfoList[0]?.ruolo || atleta?.ruolo || '—';
+
     return {
-      id, nome: dati.nome || (atleta ? atleta.cognome + ' ' + atleta.nome : id),
-      ruolo: stagInfo.ruolo || atleta?.ruolo || '—',
-      presenzeStagioni: stagioni.map(s => dati[s] || 0),
+      id,
+      nome: dati.nome || (atleta ? atleta.cognome + ' ' + atleta.nome : id),
+      ruolo,
+      presenzeStagioni,
       totale
     };
   }).sort((a,b) => b.totale - a.totale);
@@ -3666,7 +3693,12 @@ function renderRosa(partite) {
     <tr>
       <td><strong>${a.nome}</strong></td>
       <td style="font-size:12px;color:var(--testo-m);">${a.ruolo}</td>
-      ${a.presenzeStagioni.map(n => `<td style="text-align:center;font-weight:${n>0?'700':'400'};color:${n>0?'var(--blu)':'var(--grigio-t)'};">${n>0?n:'—'}</td>`).join('')}
+      ${a.presenzeStagioni.map(p => {
+        const n = p.n;
+        const hasDetail = !!p.dettaglio;
+        return `<td style="text-align:center;font-weight:${n>0?'700':'400'};color:${n>0?'var(--blu)':'var(--grigio-t)'};${hasDetail?'cursor:help;text-decoration:underline dotted var(--grigio-t);':''}"
+          ${hasDetail ? `title="${p.dettaglio}"` : ''}>${n>0?n:'—'}</td>`;
+      }).join('')}
       <td style="text-align:center;font-weight:700;color:var(--arancio);font-size:15px;">${a.totale}</td>
     </tr>
   `).join('');
