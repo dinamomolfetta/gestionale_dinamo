@@ -1023,7 +1023,7 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
 
     <!-- Card atleti + presenze -->
     <div class="home-titolo-sezione">Gestione rosa</div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px;">
 
       <!-- Card Atleti -->
       <div class="card-atleti" onclick="apriSezioneAtleti('')" style="margin-bottom:0;">
@@ -1045,16 +1045,17 @@ tbody tr:nth-child(even):hover { background: var(--grigio-s); }
         <div class="card-atleti-badge" id="home-num-presenze" style="background:var(--arancio);">0</div>
       </div>
 
-    </div>
 
-    <!-- Card Statistiche Generali -->
-    <div class="card-atleti" onclick="apriStatisticheGenerali()" style="margin-bottom:14px; background:linear-gradient(135deg,var(--blu) 0%,#2d4a8a 100%); cursor:pointer;">
-      <span class="card-atleti-icon" style="font-size:32px;">📊</span>
-      <div class="card-atleti-testo">
-        <div class="card-atleti-titolo" style="font-size:17px; color:#fff;">Statistiche Generali</div>
-        <div class="card-atleti-sub" style="color:rgba(255,255,255,0.7);">Riepilogo completo del club</div>
+      <!-- Card Statistiche Generali -->
+      <div class="card-atleti" onclick="apriStatisticheGenerali()" style="margin-bottom:0; background:linear-gradient(135deg,var(--blu) 0%,#2d4a8a 100%); cursor:pointer;">
+        <span class="card-atleti-icon" style="font-size:32px;">📊</span>
+        <div class="card-atleti-testo">
+          <div class="card-atleti-titolo" style="font-size:17px; color:#fff;">Statistiche</div>
+          <div class="card-atleti-sub" style="color:rgba(255,255,255,0.7);">Riepilogo club</div>
+        </div>
+        <div class="card-atleti-badge" style="background:var(--arancio);">→</div>
       </div>
-      <div class="card-atleti-badge" style="background:var(--arancio);">→</div>
+
     </div>
 
     <!-- Card stagioni -->
@@ -5526,16 +5527,6 @@ function apriFinestroStampa(titolo, corpo, sottotitolo) {
     <script>window.onload=function(){window.print();}<\/script>
   
 <!-- MODAL STATISTICHE GENERALI -->
-<div id="modal-stat-generali" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;padding:20px;">
-  <div style="background:var(--bianco);border-radius:var(--raggio);max-width:900px;margin:0 auto;padding:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-size:20px;font-weight:800;color:var(--blu);">📊 Statistiche Generali — ASD Pol. Dinamo Molfetta</div>
-      <button class="btn btn-secondario btn-piccolo" onclick="chiudiStatisticheGenerali()">✕ Chiudi</button>
-    </div>
-    <div id="stat-generali-contenuto"></div>
-  </div>
-</div>
-
 </body></html>`);
   w.document.close();
 }
@@ -6142,18 +6133,121 @@ function tabellaPresenzeHTML(atleti) {
   </table>`;
 }
 
+// ============================================================
+// STATISTICHE GENERALI
+// ============================================================
+function apriStatisticheGenerali() {
+  document.getElementById('modal-stat-generali').style.display = 'block';
+  renderStatGenerali();
+}
+function chiudiStatisticheGenerali() {
+  document.getElementById('modal-stat-generali').style.display = 'none';
+}
+function kpiBox(icon, val, label, color) {
+  return '<div style="background:var(--grigio-s);border-radius:var(--raggio);padding:14px;text-align:center;border-top:3px solid '+color+';">'
+    +'<div style="font-size:22px;">'+icon+'</div>'
+    +'<div style="font-size:26px;font-weight:900;color:'+color+';">'+val+'</div>'
+    +'<div style="font-size:11px;color:var(--grigio-t);margin-top:2px;">'+label+'</div></div>';
+}
+function renderStatGenerali() {
+  const cont = document.getElementById('stat-generali-contenuto');
+  if (!cont) return;
+  const tutteP = [...new Map([...(tutteLePartite||[]),...(partitiInMemoria||[])].map(p=>[p.id,p])).values()];
+  const atleti = atletiInMemoria || [];
+  const oggi = new Date().toISOString().split('T')[0];
+  const totAtleti = atleti.length;
+  const maschi = atleti.filter(a=>a.sesso==='M').length;
+  const femmine = atleti.filter(a=>a.sesso==='F').length;
+  const certScaduti = atleti.filter(a=>a.cert&&a.cert<oggi).length;
+  const gareGiocate = tutteP.filter(p=>p.esito).length;
+  const vittorie = tutteP.filter(p=>p.esito==='vittoria').length;
+  const sconfitte = tutteP.filter(p=>p.esito==='sconfitta').length;
+  const percVit = gareGiocate ? Math.round(vittorie/gareGiocate*100) : 0;
+  let setV=0,setP=0;
+  tutteP.filter(p=>p.esito).forEach(p=>{setV+=parseInt(p.set_dinamo)||0;setP+=parseInt(p.set_avversario)||0;});
+  const perStagione={};
+  tutteP.filter(p=>p.esito).forEach(p=>{
+    if(!perStagione[p.stagione]) perStagione[p.stagione]={pg:0,v:0,s:0,sv:0,sp:0};
+    const g=perStagione[p.stagione];g.pg++;g.sv+=parseInt(p.set_dinamo)||0;g.sp+=parseInt(p.set_avversario)||0;
+    if(p.esito==='vittoria')g.v++;else g.s++;
+  });
+  const stagCorr='2025/2026';
+  const perSquadra={};
+  tutteP.filter(p=>p.esito&&p.stagione===stagCorr).forEach(p=>{
+    const sq=p.squadra||'—';
+    if(!perSquadra[sq]) perSquadra[sq]={pg:0,v:0,s:0};
+    const g=perSquadra[sq];g.pg++;if(p.esito==='vittoria')g.v++;else g.s++;
+  });
+  const presenzePerAtleta={};
+  tutteP.filter(p=>p.stagione>='2022/2023').forEach(p=>{
+    (p.giocatori||[]).forEach(g=>{
+      if(!g.id||g.id.startsWith('_'))return;
+      presenzePerAtleta[g.id]=(presenzePerAtleta[g.id]||0)+1;
+    });
+  });
+  const atletiConPresenze=Object.keys(presenzePerAtleta).length;
+  const totPresenze=Object.values(presenzePerAtleta).reduce((a,b)=>a+b,0);
+  const topAtleti=Object.entries(presenzePerAtleta).sort((a,b)=>b[1]-a[1]).slice(0,5)
+    .map(([id,n])=>{const a=atleti.find(x=>x.id===id);return{nome:a?a.cognome+' '+a.nome:id,presenze:n};});
+  const squadreAttive=[...new Set(atleti.flatMap(a=>(a.stagioni||[]).filter(s=>s.stagione===stagCorr).map(s=>s.squadra)).filter(Boolean))];
+  const stagioni=Object.keys(perStagione).sort().reverse();
+  const sqCards=Object.entries(perSquadra).sort((a,b)=>a[0].localeCompare(b[0],'it')).map(([sq,g])=>{
+    const perc=g.pg?Math.round(g.v/g.pg*100):0;const col=perc>=50?'var(--verde)':'var(--rosso)';
+    return '<div style="background:var(--grigio-s);border-radius:var(--raggio);padding:10px 14px;border-left:4px solid '+col+';min-width:180px;">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--grigio-t);text-transform:uppercase;">'+sq+'</div>'
+      +'<div style="display:flex;gap:12px;margin-top:6px;align-items:center;">'
+      +'<span style="font-size:20px;font-weight:800;color:var(--blu);">'+g.pg+'</span><span style="font-size:11px;color:var(--grigio-t);">PG</span>'
+      +'<span style="font-size:20px;font-weight:800;color:var(--verde);">'+g.v+'</span><span style="font-size:11px;color:var(--grigio-t);">V</span>'
+      +'<span style="font-size:20px;font-weight:800;color:var(--rosso);">'+g.s+'</span><span style="font-size:11px;color:var(--grigio-t);">S</span>'
+      +'<span style="font-size:16px;font-weight:800;color:'+col+';margin-left:auto;">'+perc+'%</span></div></div>';
+  }).join('');
+  const righe=stagioni.map((st,i)=>{
+    const g=perStagione[st];const perc=g.pg?Math.round(g.v/g.pg*100):0;
+    return '<tr style="border-bottom:1px solid var(--grigio-m);'+(i%2===0?'background:var(--grigio-s)':'')+'">'
+      +'<td style="padding:8px;font-weight:700;">'+st+'</td><td style="padding:8px;text-align:center;">'+g.pg+'</td>'
+      +'<td style="padding:8px;text-align:center;color:var(--verde);font-weight:700;">'+g.v+'</td>'
+      +'<td style="padding:8px;text-align:center;color:var(--rosso);font-weight:700;">'+g.s+'</td>'
+      +'<td style="padding:8px;text-align:center;">'+g.sv+'</td><td style="padding:8px;text-align:center;">'+g.sp+'</td>'
+      +'<td style="padding:8px;text-align:center;font-weight:800;color:'+(perc>=50?'var(--verde)':'var(--rosso)')+';">'+perc+'%</td></tr>';
+  }).join('');
+  const topCards=topAtleti.map((a,i)=>{
+    const medal=i===0?'#f4b400':i===1?'#9e9e9e':i===2?'#cd7f32':'var(--blu)';
+    return '<div style="background:var(--grigio-s);border-radius:var(--raggio);padding:10px 16px;display:flex;align-items:center;gap:10px;min-width:200px;">'
+      +'<span style="font-size:20px;font-weight:900;color:'+medal+';">'+(i+1)+'°</span>'
+      +'<div><div style="font-size:13px;font-weight:700;">'+a.nome+'</div>'
+      +'<div style="font-size:12px;color:var(--testo-m);">'+a.presenze+' presenze</div></div></div>';
+  }).join('');
+  cont.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px;">'
+    +kpiBox('🏐',totAtleti,'Atleti totali','var(--blu)')+kpiBox('♂',maschi,'Atleti M','#2196F3')
+    +kpiBox('♀',femmine,'Atlete F','#E91E63')+kpiBox('⚽',gareGiocate,'Gare giocate','var(--blu)')
+    +kpiBox('✅',vittorie,'Vittorie','var(--verde)')+kpiBox('❌',sconfitte,'Sconfitte','var(--rosso)')
+    +kpiBox('📈',percVit+'%','Win rate',percVit>=50?'var(--verde)':'var(--rosso)')
+    +kpiBox('🏥',certScaduti,'Cert. scaduti',certScaduti>0?'var(--rosso)':'var(--verde)')+'</div>'
+    +'<div style="margin-bottom:24px;"><div style="font-size:14px;font-weight:700;color:var(--blu);margin-bottom:10px;border-bottom:2px solid var(--blu-l);padding-bottom:6px;">📅 Stagione '+stagCorr+' — per squadra</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:10px;">'+(sqCards||'<span style="color:var(--grigio-t);font-size:13px;">Nessuna gara</span>')+'</div></div>'
+    +'<div style="margin-bottom:24px;"><div style="font-size:14px;font-weight:700;color:var(--blu);margin-bottom:10px;border-bottom:2px solid var(--blu-l);padding-bottom:6px;">📆 Storico stagioni</div>'
+    +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">'
+    +'<thead><tr style="background:var(--blu);color:#fff;"><th style="padding:8px;text-align:left;">Stagione</th>'
+    +'<th style="padding:8px;text-align:center;">PG</th><th style="padding:8px;text-align:center;">V</th>'
+    +'<th style="padding:8px;text-align:center;">S</th><th style="padding:8px;text-align:center;">Set V</th>'
+    +'<th style="padding:8px;text-align:center;">Set P</th><th style="padding:8px;text-align:center;">Win%</th></tr></thead>'
+    +'<tbody>'+righe+'<tr style="background:var(--blu);color:#fff;font-weight:800;">'
+    +'<td style="padding:8px;">TOTALE</td><td style="padding:8px;text-align:center;">'+gareGiocate+'</td>'
+    +'<td style="padding:8px;text-align:center;">'+vittorie+'</td><td style="padding:8px;text-align:center;">'+sconfitte+'</td>'
+    +'<td style="padding:8px;text-align:center;">'+setV+'</td><td style="padding:8px;text-align:center;">'+setP+'</td>'
+    +'<td style="padding:8px;text-align:center;">'+percVit+'%</td></tr></tbody></table></div></div>'
+    +(atletiConPresenze>0?'<div style="margin-bottom:24px;"><div style="font-size:14px;font-weight:700;color:var(--blu);margin-bottom:10px;border-bottom:2px solid var(--blu-l);padding-bottom:6px;">🏆 Top 5 presenze (dal 2022/23)</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+topCards+'</div></div>':'')
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">'
+    +kpiBox('👥',atletiConPresenze,'Atleti con presenze','var(--blu)')
+    +kpiBox('📝',totPresenze,'Presenze registrate','var(--arancio)')
+    +kpiBox('🏟️',tutteP.length,'Gare in archivio','var(--blu)')
+    +kpiBox('🏅',squadreAttive.length,'Squadre attive','var(--verde)')+'</div>';
+}
+
 </script>
 
 <!-- MODAL STATISTICHE GENERALI -->
-<div id="modal-stat-generali" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;padding:20px;">
-  <div style="background:var(--bianco);border-radius:var(--raggio);max-width:900px;margin:0 auto;padding:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-size:20px;font-weight:800;color:var(--blu);">📊 Statistiche Generali — ASD Pol. Dinamo Molfetta</div>
-      <button class="btn btn-secondario btn-piccolo" onclick="chiudiStatisticheGenerali()">✕ Chiudi</button>
-    </div>
-    <div id="stat-generali-contenuto"></div>
-  </div>
-</div>
-
 </body>
 </html>
