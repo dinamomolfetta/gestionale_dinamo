@@ -6375,7 +6375,7 @@ function renderStatGenerali() {
     <div class="attestato-toolbar">
       <span>📜 Attestazione Attività Sportiva</span>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-secondario btn-piccolo" style="background:#fff;color:var(--blu);" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+        <button class="btn btn-secondario btn-piccolo" style="background:#fff;color:var(--blu);" onclick="stampaAttestatoAtleta()">🖨️ Stampa / Salva PDF</button>
         <button class="btn btn-secondario btn-piccolo" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);" onclick="chiudiAttestatoAtleta()">✕ Chiudi</button>
       </div>
     </div>
@@ -6499,6 +6499,53 @@ function apriAttestatoAtleta(id) {
 function chiudiAttestatoAtleta() {
   document.getElementById('modal-attestato').style.display = 'none';
   document.body.style.overflow = '';
+}
+
+function stampaAttestatoAtleta() {
+  const contenuto = document.getElementById('attestato-contenuto').innerHTML;
+  const win = window.open('', '_blank', 'width=860,height=1000');
+  win.document.write(`<!DOCTYPE html>
+<html lang="it"><head>
+<meta charset="UTF-8">
+<title>Attestazione Attività Sportiva</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Times New Roman', serif; font-size:13.5px; line-height:1.75;
+         color:#1a1a1a; background:#fff; padding:52px 64px 60px; }
+  .att-testata { display:flex; align-items:flex-start; justify-content:space-between;
+    border-bottom:2px solid #1B2A6B; padding-bottom:16px; margin-bottom:28px; }
+  .att-logo-nome { font-size:15px; font-weight:700; color:#1B2A6B;
+    text-transform:uppercase; letter-spacing:0.5px; }
+  .att-logo-sub  { font-size:11px; color:#555; line-height:1.6; margin-top:3px; }
+  .att-fipav     { text-align:right; font-size:11px; color:#555; line-height:1.6; }
+  .att-titolo    { text-align:center; font-size:19px; font-weight:700; color:#1B2A6B;
+    text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+  .att-sottotitolo { text-align:center; font-size:12px; color:#555;
+    letter-spacing:0.3px; margin-bottom:32px; font-style:italic; }
+  .att-divisore  { border:none; border-top:1px solid #ccc; margin:0 0 28px; }
+  .att-corpo     { text-align:justify; margin-bottom:14px; }
+  .att-dati      { background:#f5f7fc; border-left:3px solid #F47920;
+    padding:14px 18px; margin:22px 0; border-radius:0 6px 6px 0; font-size:13px; }
+  .att-dati table { border-collapse:collapse; width:100%; }
+  .att-dati td   { padding:4px 8px 4px 0; vertical-align:top; }
+  .att-dati td:first-child { color:#555; width:38%; font-size:12px; }
+  .att-dati td:last-child  { font-weight:600; color:#1a1a1a; }
+  .att-luogo-data { margin-top:36px; margin-bottom:48px; font-size:13px; }
+  .att-firma-area { display:flex; justify-content:flex-end; }
+  .att-firma-box  { text-align:center; width:240px; }
+  .att-firma-linea { border-top:1px solid #333; margin-top:8px; padding-top:5px;
+    font-size:12px; color:#333; }
+  .att-note { border-top:1px solid #e0e0e0; margin-top:40px; padding-top:12px;
+    font-size:10.5px; color:#888; text-align:center; font-style:italic; }
+  @media print {
+    body { padding:20mm 20mm 20mm 20mm; }
+    .att-dati { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head><body>${contenuto}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
 }
 </script>
 </body>
