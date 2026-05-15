@@ -6509,38 +6509,62 @@ function stampaAttestatoAtleta() {
 <meta charset="UTF-8">
 <title>Attestazione Attività Sportiva</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-  body { font-family: 'Times New Roman', serif; font-size:13.5px; line-height:1.75;
-         color:#1a1a1a; background:#fff; padding:52px 64px 60px; }
-  .att-testata { display:flex; align-items:flex-start; justify-content:space-between;
-    border-bottom:2px solid #1B2A6B; padding-bottom:16px; margin-bottom:28px; }
-  .att-logo-nome { font-size:15px; font-weight:700; color:#1B2A6B;
-    text-transform:uppercase; letter-spacing:0.5px; }
-  .att-logo-sub  { font-size:11px; color:#555; line-height:1.6; margin-top:3px; }
-  .att-fipav     { text-align:right; font-size:11px; color:#555; line-height:1.6; }
-  .att-titolo    { text-align:center; font-size:19px; font-weight:700; color:#1B2A6B;
-    text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
-  .att-sottotitolo { text-align:center; font-size:12px; color:#555;
-    letter-spacing:0.3px; margin-bottom:32px; font-style:italic; }
-  .att-divisore  { border:none; border-top:1px solid #ccc; margin:0 0 28px; }
-  .att-corpo     { text-align:justify; margin-bottom:14px; }
-  .att-dati      { background:#f5f7fc; border-left:3px solid #F47920;
-    padding:14px 18px; margin:22px 0; border-radius:0 6px 6px 0; font-size:13px; }
-  .att-dati table { border-collapse:collapse; width:100%; }
-  .att-dati td   { padding:4px 8px 4px 0; vertical-align:top; }
-  .att-dati td:first-child { color:#555; width:38%; font-size:12px; }
-  .att-dati td:last-child  { font-weight:600; color:#1a1a1a; }
-  .att-luogo-data { margin-top:36px; margin-bottom:48px; font-size:13px; }
-  .att-firma-area { display:flex; justify-content:flex-end; }
-  .att-firma-box  { text-align:center; width:240px; }
-  .att-firma-linea { border-top:1px solid #333; margin-top:8px; padding-top:5px;
-    font-size:12px; color:#333; }
-  .att-note { border-top:1px solid #e0e0e0; margin-top:40px; padding-top:12px;
-    font-size:10.5px; color:#888; text-align:center; font-style:italic; }
-  @media print {
-    body { padding:20mm 20mm 20mm 20mm; }
-    .att-dati { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page {
+    size: A4 portrait;
+    margin: 16mm 18mm 16mm 18mm;
   }
+  *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    font-family: 'Times New Roman', serif;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  /* TESTATA */
+  .att-testata {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #1B2A6B;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  .att-logo-nome { font-size:13px; font-weight:700; color:#1B2A6B; text-transform:uppercase; letter-spacing:0.5px; }
+  .att-logo-sub  { font-size:10px; color:#555; line-height:1.5; margin-top:2px; }
+  .att-fipav     { text-align:right; font-size:10px; color:#555; line-height:1.5; }
+  /* TITOLO */
+  .att-titolo { text-align:center; font-size:16px; font-weight:700; color:#1B2A6B;
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .att-sottotitolo { text-align:center; font-size:10.5px; color:#555;
+    letter-spacing:0.3px; margin-bottom:18px; font-style:italic; }
+  .att-divisore { border:none; border-top:1px solid #ccc; margin:0 0 16px; }
+  /* CORPO */
+  .att-corpo { text-align:justify; margin-bottom:10px; font-size:11.5px; line-height:1.6; }
+  /* DATI ATLETA */
+  .att-dati {
+    background:#f5f7fc; border-left:3px solid #F47920;
+    padding:10px 14px; margin:14px 0; border-radius:0 5px 5px 0;
+    font-size:11.5px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .att-dati table { border-collapse:collapse; width:100%; }
+  .att-dati td { padding:3px 8px 3px 0; vertical-align:top; }
+  .att-dati td:first-child { color:#555; width:36%; font-size:11px; }
+  .att-dati td:last-child  { font-weight:600; color:#1a1a1a; }
+  /* LUOGO DATA + FIRMA */
+  .att-luogo-data { margin-top:20px; margin-bottom:24px; font-size:11.5px; }
+  .att-firma-area { display:flex; justify-content:flex-end; }
+  .att-firma-box  { text-align:center; width:220px; }
+  .att-firma-linea { border-top:1px solid #333; margin-top:6px; padding-top:4px;
+    font-size:11px; color:#333; }
+  /* NOTE */
+  .att-note { border-top:1px solid #e0e0e0; margin-top:24px; padding-top:8px;
+    font-size:9.5px; color:#999; text-align:center; font-style:italic; }
+  /* FIRMA IMMAGINE */
+  .att-firma-box img { width:180px !important; height:auto !important; }
 </style>
 </head><body>${contenuto}</body></html>`);
   win.document.close();
